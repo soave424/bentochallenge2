@@ -66,5 +66,18 @@ Menu Items:
 {{/each}}
 
 Simulate the choices for {{numVirtualPlayers}} virtual players. Provide the item numbers chosen by each player in the following JSON format:
+${JSON.stringify(VirtualPlayerChoicesSchema.description)}
+`,
+});
 
-{ 
+const simulateVirtualPlayersFlow = ai.defineFlow(
+  {
+    name: 'simulateVirtualPlayersFlow',
+    inputSchema: SimulateVirtualPlayersInputSchema,
+    outputSchema: VirtualPlayerChoicesSchema,
+  },
+  async input => {
+    const {output} = await simulateVirtualPlayersPrompt(input);
+    return output!;
+  }
+);
