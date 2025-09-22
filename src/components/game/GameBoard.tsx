@@ -37,21 +37,13 @@ const GameBoard = () => {
   const humanPlayer = useMemo(() => players.find(p => p.isHuman), [players]);
   const currentPlayer = useMemo(() => players[currentPlayerIndex], [players, currentPlayerIndex]);
 
-  useEffect(() => {
-    const loadData = async () => {
-      const items = await getMenuItems();
-      setMenuItems(items);
-    };
-    loadData();
-  }, []);
-
   const canHumanPlayerSkip = useMemo(() => {
     if (!humanPlayer || !currentCategory || gamePhase !== 'buying') return false;
     
-    // 이미 샀으면 스킵 불가
+    // 이미 샀으면 스킵 가능
     const hasBoughtFromCategory = humanPlayer.bento.some(i => i.category === currentCategory);
     if(hasBoughtFromCategory){
-      return true; // 이미 샀으니, 턴을 넘겨야 함
+      return true;
     }
     
     // 살 수 있는 아이템이 하나라도 있으면 스킵 불가
@@ -69,7 +61,6 @@ const GameBoard = () => {
       {p.name}
     </span>
   )), [players, currentPlayerIndex]);
-
 
   const nextTurn = useCallback(() => {
     setCurrentPlayerIndex(prevIndex => {
@@ -121,7 +112,7 @@ const GameBoard = () => {
       id: 'player-human', name: '나', isHuman: true, seeds: INITIAL_SEEDS, bento: [], bonusCards: [], eliminated: false,
     };
     
-    const virtualPlayerNames = ['가상 플레이어 1', '가상 플레이어 2', '가상 플레이어 3', '가상 플레이어 4', '가상 플레이어 5'];
+    const virtualPlayerNames = ['가상 플레이어 1', '가상 플레이어 2', '가상 플레이어 3'];
     let initialPlayers: Player[] = [human];
 
     if (NUM_VIRTUAL_PLAYERS > 0) {
@@ -229,20 +220,19 @@ const GameBoard = () => {
   };
   
   const handleSkipTurn = () => {
-    const hasBoughtFromCategory = currentPlayer?.bento.some(i => i.category === currentCategory);
-    
-    if (gamePhase === 'buying' && currentPlayer?.isHuman && !hasBoughtFromCategory) {
-       toast({ title: "구매 필요!", description: `이번 라운드의 아이템을 아직 구매하지 않았습니다.`, variant: 'destructive' });
-       return;
-    }
+    if (gamePhase !== 'buying' || !currentPlayer.isHuman) return;
 
-    if (canHumanPlayerSkip) {
-        toast({ description: `구매할 아이템이 없거나 이미 구매하여 턴을 넘깁니다.` });
-        nextTurn();
-    } else {
-        toast({ title: "구매 필요!", description: `이번 라운드의 아이템을 아직 구매하지 않았습니다.`, variant: 'destructive' });
+    const hasBoughtFromCategory = currentPlayer.bento.some(i => i.category === currentCategory);
+    
+    if(!hasBoughtFromCategory && !canHumanPlayerSkip) {
+        toast({ title: "구매 필요!", description: `이번 라운드의 아이템을 구매해야 합니다.`, variant: 'destructive' });
+        return;
     }
+    
+    toast({ description: `구매할 아이템이 없거나 이미 구매하여 턴을 넘깁니다.` });
+    nextTurn();
   };
+
 
   const handleBuyItem = (item: MenuItem) => {
     if (gamePhase !== 'buying' || !currentPlayer.isHuman) return;
