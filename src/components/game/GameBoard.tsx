@@ -107,23 +107,21 @@ const GameBoard = () => {
   const handleRollDice = (d1: number, d2: number) => {
     setDice([d1, d2]);
     if (d1 === d2) {
-      setGamePhase('bonus_card');
       const randomCard = bonusCards[Math.floor(Math.random() * bonusCards.length)];
       setLastBonusCard(randomCard);
       
-      setPlayers(prev => prev.map(p => ({
-        ...p,
-        bonusCards: [...p.bonusCards, randomCard]
-      })));
+      setPlayers(prev => prev.map(p => 
+        p.id === currentPlayer.id 
+          ? { ...p, bonusCards: [...p.bonusCards, randomCard] }
+          : p
+      ));
 
       toast({
         title: '보너스 카드!',
-        description: `모두가 '${randomCard.name}' 카드를 받았습니다. ${randomCard.description}`,
+        description: `${currentPlayer.name}님이 '${randomCard.name}' 카드를 받았습니다!`,
       });
-      setTimeout(() => setGamePhase('buying'), 2000);
-    } else {
-      setGamePhase('buying');
     }
+    setGamePhase('buying');
   };
 
   const handleBuyItem = (item: MenuItem) => {
@@ -136,7 +134,7 @@ const GameBoard = () => {
     
     const hasBoughtFromCategory = currentPlayer.bento.some(i => i.category === currentCategory);
     if(hasBoughtFromCategory){
-       toast({ title: '카테고리 구매 제한!', description: `이번 라운드에는 ${currentCategory} 카테고리에서 이미 아이템을 구매했습니다.`, variant: 'destructive' });
+       toast({ title: '카테고리 구매 제한!', description: `이번 라운드에는 ${CATEGORY_NAMES[currentCategory]} 카테고리에서 이미 아이템을 구매했습니다.`, variant: 'destructive' });
        return;
     }
 
@@ -198,10 +196,10 @@ const GameBoard = () => {
 
                         toast({ title: `${ai.name} 구매!`, description: `${ai.name}이(가) ${itemToBuy.name}을(를) ${itemToBuy.price} 씨앗으로 샀습니다.` });
                     } else {
-                        toast({ description: `${ai.name}은(는) ${currentCategory}에서 아무것도 사지 못했습니다.` });
+                        toast({ description: `${ai.name}은(는) ${CATEGORY_NAMES[currentCategory]}에서 아무것도 사지 못했습니다.` });
                     }
                 } else {
-                toast({ description: `${ai.name}은(는) ${currentCategory}에서 아무것도 사지 못했습니다.` });
+                toast({ description: `${ai.name}은(는) ${CATEGORY_NAMES[currentCategory]}에서 아무것도 사지 못했습니다.` });
                 }
             } else {
                 toast({ description: `${ai.name}은(는) 이번 라운드에 이미 구매를 마쳤습니다.` });
@@ -212,13 +210,16 @@ const GameBoard = () => {
         }
 
         if (d1 === d2) {
-            setGamePhase('bonus_card');
             const randomCard = bonusCards[Math.floor(Math.random() * bonusCards.length)];
             setLastBonusCard(randomCard);
             
-            setPlayers(prev => prev.map(p => ({ ...p, bonusCards: [...p.bonusCards, randomCard] })));
+            setPlayers(prev => prev.map(p => 
+                p.id === ai.id 
+                ? { ...p, bonusCards: [...p.bonusCards, randomCard] }
+                : p
+            ));
             
-            toast({ title: '보너스 카드!', description: `모두가 '${randomCard.name}' 카드를 받았습니다.` });
+            toast({ title: '보너스 카드!', description: `${ai.name}님이 '${randomCard.name}' 카드를 받았습니다!` });
             setTimeout(() => buyingTurn(), 2000);
             return;
         }
@@ -286,5 +287,3 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
-
-    
