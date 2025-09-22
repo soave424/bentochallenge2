@@ -38,15 +38,26 @@ const GameBoard = () => {
   const currentPlayer = useMemo(() => players[currentPlayerIndex], [players, currentPlayerIndex]);
 
   const advanceToNextPlayer = useCallback(() => {
-    setCurrentPlayerIndex(prevIndex => {
-      let nextIndex = prevIndex + 1;
-      if (nextIndex >= players.length) {
-        setGamePhase('round_summary');
-        return prevIndex;
+    let nextIndex = currentPlayerIndex + 1;
+
+    // Find the next non-eliminated player
+    while(nextIndex < players.length && players[nextIndex].eliminated) {
+      toast({description: `${players[nextIndex].name}님은 탈락하여 턴을 건너뜁니다.`})
+      nextIndex++;
+    }
+
+    if (nextIndex >= players.length) {
+      setGamePhase('round_summary');
+    } else {
+      setCurrentPlayerIndex(nextIndex);
+      const nextPlayer = players[nextIndex];
+      if (nextPlayer.isHuman) {
+        setGamePhase('rolling');
+      } else {
+        setGamePhase('ai_turn');
       }
-      return nextIndex;
-    });
-  }, [players.length]);
+    }
+  }, [currentPlayerIndex, players, toast]);
 
 
   const canHumanPlayerSkip = useMemo(() => {
@@ -81,8 +92,15 @@ const GameBoard = () => {
     const newPlayerOrder = shuffle([...players]);
     setPlayers(newPlayerOrder);
     
-    setCurrentPlayerIndex(0);
-    setGamePhase('player_turn');
+    const firstPlayerIndex = 0;
+    setCurrentPlayerIndex(firstPlayerIndex);
+
+    const firstPlayer = newPlayerOrder[firstPlayerIndex];
+    if (firstPlayer.isHuman) {
+      setGamePhase('rolling');
+    } else {
+      setGamePhase('ai_turn');
+    }
   }
 
   const initializeGame = useCallback(async () => {
@@ -124,9 +142,14 @@ const GameBoard = () => {
     const shuffledPlayers = shuffle(initialPlayers);
     setPlayers(shuffledPlayers);
     
-    setCurrentPlayerIndex(0);
-
-    setGamePhase('player_turn');
+    const firstPlayerIndex = 0;
+    setCurrentPlayerIndex(firstPlayerIndex);
+    const firstPlayer = shuffledPlayers[firstPlayerIndex];
+    if(firstPlayer.isHuman){
+        setGamePhase('rolling');
+    } else {
+        setGamePhase('ai_turn');
+    }
   }, []);
   
   useEffect(() => {
@@ -137,50 +160,25 @@ const GameBoard = () => {
   const checkAndHandleElimination = (player: Player): Player => {
     if (player.eliminated) return player;
     
-    const minPriceInGame = Math.min(...menuItems.map(i => i.price));
-    if (player.seeds < minPriceInGame) {
-        const canEverAffordAnything = menuItems.some(item => player.seeds >= item.price && !player.bento.some(b => b.category === item.category));
-        if (!canEverAffordAnything && player.bento.length < CATEGORIES.length) {
-            toast({ 
-                title: `${player.name} 탈락`, 
-                description: `씨앗이 부족하여 더 이상 아이템을 구매할 수 없습니다.`, 
-                variant: 'destructive'
-            });
-            return { ...player, eliminated: true };
-        }
+    // Check if player has enough seeds to buy any item left in the *entire game* in categories they haven't bought from yet
+    const remainingCategories = CATEGORIES.filter(cat => !player.bento.some(item => item.category === cat));
+    
+    if (remainingCategories.length === 0) return player;
+
+    const minPriceInGameForRemainingCategories = Math.min(...menuItems.filter(i => remainingCategories.includes(i.category)).map(i => i.price));
+
+    if (player.seeds < minPriceInGameForRemainingCategories) {
+        toast({ 
+            title: `${player.name} 탈락`, 
+            description: `씨앗이 부족하여 더 이상 필수 아이템을 구매할 수 없습니다.`, 
+            variant: 'destructive'
+        });
+        return { ...player, eliminated: true };
     }
+
     return player;
 };
-
-  // Main Game Loop Controller
-  useEffect(() => {
-    if (['welcome', 'loading', 'round_summary', 'game_over'].includes(gamePhase)) return;
-
-    const activePlayer = players[currentPlayerIndex];
-    if (!activePlayer) {
-      if (players.length > 0) {
-        const nextAvailablePlayer = players.findIndex(p => !p.eliminated);
-        if(nextAvailablePlayer !== -1) setCurrentPlayerIndex(nextAvailablePlayer);
-        else setGamePhase('game_over');
-      }
-      return;
-    }
-
-    if (activePlayer.eliminated) {
-      toast({description: `${activePlayer.name}님은 탈락하여 턴을 건너뜁니다.`})
-      setTimeout(() => advanceToNextPlayer(), 1000);
-      return;
-    }
-
-    if (gamePhase === 'player_turn') {
-      if (activePlayer.isHuman) {
-        setGamePhase('rolling');
-      } else {
-        setGamePhase('ai_turn');
-      }
-    }
-  }, [gamePhase, players, currentPlayerIndex, advanceToNextPlayer, toast]);
-
+  
   const handleRollDice = () => {
     if (gamePhase !== 'rolling') return;
 
@@ -216,13 +214,14 @@ const GameBoard = () => {
     const hasBoughtFromCategory = currentPlayer.bento.some(i => i.category === currentCategory);
     const canAffordAny = shopItems.some(item => !purchasedItemIds.includes(item.id) && currentPlayer.seeds >= item.price);
     
-    if (hasBoughtFromCategory || !canAffordAny) {
-      toast({ description: `턴을 넘깁니다.` });
-      setGamePhase('player_turn');
-      advanceToNextPlayer();
-    } else {
-       toast({ title: '턴 넘기기 불가', description: '아직 구매할 수 있는 아이템이 있습니다!', variant: 'destructive' });
+    // Allow skipping only if player HAS to (cannot afford anything OR has already bought)
+    if (!hasBoughtFromCategory && canAffordAny) {
+       toast({ title: '턴 넘기기 불가', description: '이번 라운드의 아이템을 아직 구매하지 않았습니다. 아이템을 구매해주세요!', variant: 'destructive' });
+       return;
     }
+    
+    toast({ description: `턴을 넘깁니다.` });
+    advanceToNextPlayer();
   };
 
 
@@ -251,6 +250,7 @@ const GameBoard = () => {
         toast({ title: '페트병 규제!', description: `'${item.name}' 구매로 씨앗 1개를 잃습니다.`, variant: 'destructive' });
         finalSeeds = Math.max(0, finalSeeds - 1);
     }
+
     const updatedPlayer = {
       ...currentPlayer,
       seeds: finalSeeds,
@@ -265,7 +265,6 @@ const GameBoard = () => {
     
     // --- Advance Turn ---
     setTimeout(() => {
-      setGamePhase('player_turn');
       advanceToNextPlayer();
     }, 500);
   };
@@ -311,8 +310,10 @@ const GameBoard = () => {
                 const shoppingListItems = availableCategoryItems.filter(item => (ai.aiShoppingList || []).includes(item.id));
 
                 if(shoppingListItems.length > 0) {
+                    // Prefer item from shopping list, highest price first
                     itemToBuy = shoppingListItems.sort((a,b) => b.price - a.price)[0];
                 } else {
+                    // If no shopping list item is available, pick the highest price one from what's left
                     itemToBuy = availableCategoryItems.sort((a,b) => b.price - a.price)[0];
                 }
 
@@ -345,20 +346,19 @@ const GameBoard = () => {
         }
         
         setTimeout(() => {
-          setGamePhase('player_turn');
           advanceToNextPlayer();
         }, 1500);
       }, 2500); // Delay between rolling and buying for AI
     };
 
     startAiTurn();
-  }, [gamePhase, currentPlayer, advanceToNextPlayer, shopItems, toast, currentCategory, purchasedItemIds, players]);
+  }, [gamePhase, currentPlayer, advanceToNextPlayer, shopItems, toast, currentCategory, purchasedItemIds]);
   
   if (gamePhase === 'welcome') {
     return <WelcomeDialog onStart={initializeGame} />;
   }
   
-  if (gamePhase === 'loading' || !currentCategory || !humanPlayer || !currentPlayer || menuItems.length === 0) {
+  if (gamePhase === 'loading' || !humanPlayer || !currentPlayer || menuItems.length === 0) {
     return <div className="text-xl font-headline">게임 준비 중...</div>
   }
 
@@ -432,3 +432,5 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
+
+    
