@@ -51,21 +51,21 @@ const simulateVirtualPlayersPrompt = ai.definePrompt({
 
 The game involves players selecting items from a menu to create a bento box while staying within a budget and meeting certain category requirements. Each player starts with a fixed number of seeds (currency) to spend.
 
-The menu consists of items from five categories: side dishes, fruits, drinks, containers, and snacks. Each player must select at least one item from each category, if possible within their budget.
+The menu consists of items from five categories: side dishes, fruits, drinks, containers, and snacks. Each player should select a variety of items across all categories throughout the game.
 
-Given the following constraints and the menu items, simulate the item choices for each virtual player.
+Given the following constraints and the menu items, create a plausible shopping list for each virtual player for the entire game.
 
 Constraints:
 - Each virtual player starts with {{availableSeeds}} seeds.
-- Each player must select at least one item from each of the five categories if their budget allows.
-- Players should aim to maximize their taste, convenience and eco scores.
+- Players should aim to maximize their taste, convenience and eco scores, while spending their seeds.
+- The total cost of items in the list should be close to, but not exceeding, the available seeds.
 
-Menu Items:
+Menu Items (only use the id for the output):
 {{#each menuItems}}
   id:{{this.id}}, name:{{this.name}}, price:{{this.price}}, taste:{{this.taste}}, convenience:{{this.convenience}}, eco:{{this.eco}}
 {{/each}}
 
-Simulate the choices for {{numVirtualPlayers}} virtual players. Provide the item ids chosen by each player in the following JSON format:
+Simulate the shopping list for {{numVirtualPlayers}} virtual players. Provide the item ids chosen by each player in the following JSON format.
 \`\`\`json
 {{jsonStringify output.schema}}
 \`\`\`
