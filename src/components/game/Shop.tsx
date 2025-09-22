@@ -10,6 +10,7 @@ interface ShopProps {
   items: MenuItem[];
   onBuy: (item: MenuItem) => void;
   disabled: boolean;
+  round: number;
 }
 
 const categoryIcons: Record<Category, string> = {
@@ -20,7 +21,7 @@ const categoryIcons: Record<Category, string> = {
     'Snack': '🍪',
 }
 
-const Shop = ({ items, onBuy, disabled }: ShopProps) => {
+const Shop = ({ items, onBuy, disabled, round }: ShopProps) => {
   const itemsByCategory = CATEGORIES.reduce((acc, category) => {
     acc[category] = items.filter(item => item.category === category);
     return acc;
@@ -28,8 +29,9 @@ const Shop = ({ items, onBuy, disabled }: ShopProps) => {
 
   return (
     <Card className="h-full">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="font-headline text-2xl">Item Shop</CardTitle>
+        <Badge variant="secondary" className="text-lg">Round {round}</Badge>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[75vh] pr-4">
@@ -40,7 +42,7 @@ const Shop = ({ items, onBuy, disabled }: ShopProps) => {
                     {categoryIcons[category]} {category}
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {itemsByCategory[category].map(item => (
+                  {itemsByCategory[category].length > 0 ? itemsByCategory[category].map(item => (
                     <Card
                       key={item.id}
                       onClick={() => !disabled && onBuy(item)}
@@ -64,7 +66,7 @@ const Shop = ({ items, onBuy, disabled }: ShopProps) => {
                         <p className="text-sm font-semibold truncate">{item.name}</p>
                       </div>
                     </Card>
-                  ))}
+                  )) : <p className="text-sm text-muted-foreground col-span-full">All items in this category have been purchased.</p>}
                 </div>
               </div>
             ))}

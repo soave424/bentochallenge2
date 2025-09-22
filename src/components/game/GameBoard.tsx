@@ -25,14 +25,46 @@ const GameBoard = () => {
   const [dice, setDice] = useState<[number, number]>([1, 1]);
   const [shopItems, setShopItems] = useState<MenuItem[]>(menuItems);
   const [lastBonusCard, setLastBonusCard] = useState<BonusCard | null>(null);
+  const [round, setRound] = useState(1);
 
   const { toast } = useToast();
 
   const humanPlayer = useMemo(() => players.find(p => p.isHuman), [players]);
   const currentPlayer = useMemo(() => players[currentPlayerIndex], [players, currentPlayerIndex]);
 
+  const isGameOver = useCallback(() => {
+    const activePlayers = players.filter(p => !p.eliminated);
+    if (activePlayers.length <= 1) return true;
+    if (shopItems.length === 0) return true;
+    const cheapestItem = Math.min(...shopItems.map(i => i.price));
+    return activePlayers.every(p => p.seeds < cheapestItem);
+  }, [players, shopItems]);
+
+  const nextTurn = useCallback(() => {
+    const nextIndex = (currentPlayerIndex + 1) % players.length;
+    if (nextIndex === 0) {
+      setRound(prev => prev + 1);
+    }
+    setCurrentPlayerIndex(nextIndex);
+
+    if (isGameOver()) {
+      setGamePhase('game_over');
+      return;
+    }
+
+    const nextPlayer = players[nextIndex];
+    if (nextPlayer.eliminated) {
+      // Skip eliminated players
+      setTimeout(() => nextTurn(), 500);
+      return;
+    }
+    
+    setGamePhase(nextPlayer.isHuman ? 'rolling' : 'ai_turn');
+  }, [currentPlayerIndex, players, isGameOver]);
+
   const initializeGame = useCallback(async () => {
     setGamePhase('loading');
+    setRound(1);
     const human: Player = {
       id: 'player-human', name: 'You', isHuman: true, seeds: INITIAL_SEEDS, bento: [], bonusCards: [], eliminated: false,
     };
@@ -59,25 +91,6 @@ const GameBoard = () => {
     setGamePhase('rolling');
   }, []);
 
-  const nextTurn = useCallback(() => {
-    const nextIndex = (currentPlayerIndex + 1) % players.length;
-    setCurrentPlayerIndex(nextIndex);
-    const nextPlayer = players[nextIndex];
-
-    if(isGameOver()) {
-        setGamePhase('game_over');
-        return;
-    }
-
-    if (nextPlayer.eliminated) {
-        // Skip eliminated players
-        setTimeout(() => nextTurn(), 500);
-        return;
-    }
-    
-    setGamePhase(nextPlayer.isHuman ? 'rolling' : 'ai_turn');
-  }, [currentPlayerIndex, players]);
-
   const handleRollDice = (d1: number, d2: number) => {
     setDice([d1, d2]);
     if (d1 === d2) {
@@ -100,38 +113,11 @@ const GameBoard = () => {
     }
   };
 
-  const handleBuyItem = (item: MenuItem) => {
-    if (gamePhase !== 'buying' || !currentPlayer.isHuman) return;
-    if (currentPlayer.seeds < item.price) {
-      toast({ title: 'Not enough seeds!', description: `You need ${item.price} seeds but only have ${currentPlayer.seeds}.`, variant: 'destructive' });
-      return;
-    }
-    
-    setPlayers(prev => prev.map(p => p.id === currentPlayer.id ? {
-      ...p,
-      seeds: p.seeds - item.price,
-      bento: [...p.bento, item],
-    } : p));
-    
-    setShopItems(prev => prev.filter(i => i.id !== item.id));
-    toast({ title: 'Item Purchased!', description: `You bought ${item.name} for ${item.price} seeds.` });
-
-    checkElimination(currentPlayer.id, currentPlayer.seeds - item.price);
-    
-    setTimeout(() => nextTurn(), 1000);
-  };
-  
-  const isGameOver = useCallback(() => {
-    const activePlayers = players.filter(p => !p.eliminated);
-    if (activePlayers.length <= 1) return true;
-    const cheapestItem = Math.min(...shopItems.map(i => i.price));
-    return activePlayers.every(p => p.seeds < cheapestItem);
-  }, [players, shopItems]);
-
   const checkElimination = (playerId: string, currentSeeds: number) => {
     const player = players.find(p => p.id === playerId);
     if (!player) return;
 
+    // A player is eliminated if they cannot afford any available item AND they haven't fulfilled the category requirement.
     const canBuyAnything = shopItems.some(item => currentSeeds >= item.price);
     if (!canBuyAnything) {
       const bentoCategories = new Set(player.bento.map(item => item.category));
@@ -141,6 +127,29 @@ const GameBoard = () => {
       }
     }
   };
+
+  const handleBuyItem = (item: MenuItem) => {
+    if (gamePhase !== 'buying' || !currentPlayer.isHuman) return;
+    if (currentPlayer.seeds < item.price) {
+      toast({ title: 'Not enough seeds!', description: `You need ${item.price} seeds but only have ${currentPlayer.seeds}.`, variant: 'destructive' });
+      return;
+    }
+    
+    const newSeeds = currentPlayer.seeds - item.price;
+    setPlayers(prev => prev.map(p => p.id === currentPlayer.id ? {
+      ...p,
+      seeds: newSeeds,
+      bento: [...p.bento, item],
+    } : p));
+    
+    setShopItems(prev => prev.filter(i => i.id !== item.id));
+    toast({ title: 'Item Purchased!', description: `You bought ${item.name} for ${item.price} seeds.` });
+
+    checkElimination(currentPlayer.id, newSeeds);
+    
+    setTimeout(() => nextTurn(), 1000);
+  };
+  
 
   // AI Turn Logic
   useEffect(() => {
@@ -166,15 +175,18 @@ const GameBoard = () => {
 
         // AI Buying logic
         let boughtItem = false;
+        
+        // Try to buy from pre-calculated shopping list first
         if (ai.aiShoppingList && ai.aiShoppingList.length > 0) {
             for (let i = 0; i < ai.aiShoppingList.length; i++) {
                 const itemId = ai.aiShoppingList[i];
                 const itemToBuy = shopItems.find(item => item.id === itemId);
 
                 if (itemToBuy && ai.seeds >= itemToBuy.price) {
+                    const newSeeds = ai.seeds - itemToBuy.price;
                     setPlayers(prev => prev.map(p => p.id === ai.id ? {
                       ...p,
-                      seeds: p.seeds - itemToBuy.price,
+                      seeds: newSeeds,
                       bento: [...p.bento, itemToBuy],
                       aiShoppingList: p.aiShoppingList?.filter(id => id !== itemId)
                     } : p));
@@ -182,14 +194,33 @@ const GameBoard = () => {
                     setShopItems(prev => prev.filter(i => i.id !== itemToBuy.id));
                     toast({ title: `${ai.name} purchased!`, description: `${ai.name} bought ${itemToBuy.name} for ${itemToBuy.price} seeds.` });
                     boughtItem = true;
-                    checkElimination(ai.id, ai.seeds - itemToBuy.price);
-                    break;
+                    checkElimination(ai.id, newSeeds);
+                    break; 
                 }
             }
         }
         
+        // If no item from the list was bought, try buying any affordable item.
         if (!boughtItem) {
-          toast({ description: `${ai.name} couldn't buy anything.` });
+            const affordableItems = shopItems.filter(item => ai.seeds >= item.price).sort((a,b) => b.price - a.price);
+            if (affordableItems.length > 0) {
+                const itemToBuy = affordableItems[0];
+                const newSeeds = ai.seeds - itemToBuy.price;
+                 setPlayers(prev => prev.map(p => p.id === ai.id ? {
+                      ...p,
+                      seeds: newSeeds,
+                      bento: [...p.bento, itemToBuy],
+                    } : p));
+
+                    setShopItems(prev => prev.filter(i => i.id !== itemToBuy.id));
+                    toast({ title: `${ai.name} purchased!`, description: `${ai.name} bought ${itemToBuy.name} for ${itemToBuy.price} seeds.` });
+                    boughtItem = true;
+                    checkElimination(ai.id, newSeeds);
+            }
+        }
+
+        if (!boughtItem) {
+          toast({ description: `${ai.name} couldn't buy anything this turn.` });
         }
 
         setTimeout(() => nextTurn(), 1500);
@@ -209,7 +240,7 @@ const GameBoard = () => {
   return (
     <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
-        <Shop items={shopItems} onBuy={handleBuyItem} disabled={gamePhase !== 'buying'} />
+        <Shop items={shopItems} onBuy={handleBuyItem} disabled={gamePhase !== 'buying'} round={round} />
       </div>
 
       <div className="flex flex-col gap-6">
