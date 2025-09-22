@@ -6,7 +6,7 @@ import { calculatePlayerScore } from '@/lib/scoring';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CATEGORY_NAMES } from '@/lib/types';
+import { CATEGORIES, CATEGORY_NAMES } from '@/lib/types';
 
 interface RoundSummaryProps {
   players: Player[];
@@ -20,12 +20,14 @@ const RoundSummary = ({ players, round, onNextRound }: RoundSummaryProps) => {
     score: calculatePlayerScore(p),
   })).sort((a, b) => b.score.total - a.score.total), [players]);
 
+  const currentCategoryName = CATEGORY_NAMES[CATEGORIES[round]];
+
   return (
     <Dialog open={true}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-headline">
-            라운드 {round + 1}: {CATEGORY_NAMES[players[0].bento[round].category]} 종료
+            라운드 {round + 1}: {currentCategoryName} 종료
           </DialogTitle>
           <DialogDescription>
             현재까지의 순위입니다.
@@ -45,9 +47,9 @@ const RoundSummary = ({ players, round, onNextRound }: RoundSummaryProps) => {
             </TableHeader>
             <TableBody>
               {scores.map(({ player, score }, index) => (
-                <TableRow key={player.id}>
+                <TableRow key={player.id} className={player.eliminated ? "opacity-50" : ""}>
                   <TableCell className="font-bold">{index + 1}</TableCell>
-                  <TableCell>{player.name}</TableCell>
+                  <TableCell>{player.name} {player.eliminated ? '(탈락)' : ''}</TableCell>
                   <TableCell className="text-right">{score.taste}</TableCell>
                   <TableCell className="text-right">{score.convenience}</TableCell>
                   <TableCell className="text-right">{score.eco}</TableCell>
@@ -59,7 +61,7 @@ const RoundSummary = ({ players, round, onNextRound }: RoundSummaryProps) => {
         </div>
         <DialogFooter>
           <Button onClick={onNextRound} className="w-full">
-            {round < 4 ? '다음 라운드로' : '최종 결과 보기'}
+            {round < CATEGORIES.length - 1 ? '다음 라운드로' : '최종 결과 보기'}
           </Button>
         </DialogFooter>
       </DialogContent>
