@@ -174,7 +174,8 @@ const PlayerStatus = ({ player, isCurrent, isCompact = false }: PlayerStatusProp
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>비밀 보너스 카드</p>
+                                    <p className="font-bold">{card.name}</p>
+                                    <p className="text-sm text-muted-foreground">{card.description}</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
@@ -190,3 +191,4 @@ const PlayerStatus = ({ player, isCurrent, isCompact = false }: PlayerStatusProp
 export default PlayerStatus;
 
     
+

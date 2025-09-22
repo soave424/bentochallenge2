@@ -58,7 +58,6 @@ const GameBoard = () => {
   const [lastBonusCard, setLastBonusCard] = useState<BonusCard | null>(null);
   const [round, setRound] = useState(0); // 0-indexed, so 0 is round 1
   const [purchasedItemIds, setPurchasedItemIds] = useState<string[]>([]);
-  const [isRoundSummaryOpen, setIsRoundSummaryOpen] = useState(false);
   const { toast } = useToast();
 
   const currentCategory = useMemo(() => CATEGORIES[round], [round]);
@@ -70,7 +69,7 @@ const GameBoard = () => {
     const nextIndex = currentPlayerIndex + 1;
     if (nextIndex >= players.length) {
       // All players have taken their turn in the current round
-      setIsRoundSummaryOpen(true);
+      setGamePhase('round_end');
     } else {
       setCurrentPlayerIndex(nextIndex);
       const nextPlayer = players[nextIndex];
@@ -99,8 +98,6 @@ const GameBoard = () => {
   )), [players, currentPlayerIndex, gamePhase]);
 
   const advanceRound = () => {
-    setIsRoundSummaryOpen(false);
-    
     if (round >= CATEGORIES.length - 1) {
         setGamePhase('game_over');
         return;
@@ -132,7 +129,6 @@ const GameBoard = () => {
 
   const initializeGame = useCallback(async () => {
     setGamePhase('loading');
-    setIsRoundSummaryOpen(false);
     
     let currentMenuItems = await getMenuItems();
     if (!currentMenuItems || currentMenuItems.length === 0) {
@@ -395,12 +391,12 @@ const GameBoard = () => {
         </div>
       </div>
        
-      {isRoundSummaryOpen && (
+      {gamePhase === 'round_end' && (
         <RoundSummary
           players={players}
           round={round}
-          onClose={() => setIsRoundSummaryOpen(false)}
           onNextRound={advanceRound}
+          isLastRound={round >= CATEGORIES.length - 1}
         />
       )}
 
@@ -414,3 +410,4 @@ const GameBoard = () => {
 export default GameBoard;
 
     
+

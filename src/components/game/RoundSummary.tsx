@@ -13,11 +13,11 @@ import { ArrowRight } from 'lucide-react';
 interface RoundSummaryProps {
   players: Player[];
   round: number;
-  onClose: () => void;
   onNextRound: () => void;
+  isLastRound: boolean;
 }
 
-const RoundSummary = ({ players, round, onClose, onNextRound }: RoundSummaryProps) => {
+const RoundSummary = ({ players, round, onNextRound, isLastRound }: RoundSummaryProps) => {
   const scores = useMemo(() => players.map(p => ({
     player: p,
     score: calculatePlayerScore(p, false).score,
@@ -33,8 +33,8 @@ const RoundSummary = ({ players, round, onClose, onNextRound }: RoundSummaryProp
   const currentCategoryName = CATEGORY_NAMES[CATEGORIES[round]];
 
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl">
+    <Dialog open={true}>
+      <DialogContent className="max-w-2xl" hideCloseButton={true}>
         <DialogHeader>
           <DialogTitle className="text-2xl font-headline">
             라운드 {round + 1}: {currentCategoryName} 종료
@@ -73,9 +73,8 @@ const RoundSummary = ({ players, round, onClose, onNextRound }: RoundSummaryProp
           </Table>
         </div>
         <DialogFooter>
-            <Button variant="outline" onClick={onClose}>닫기</Button>
             <Button onClick={onNextRound}>
-              다음 라운드로 <ArrowRight className="w-4 h-4 ml-2"/>
+              {isLastRound ? '최종 결과 보기' : '다음 라운드로'} <ArrowRight className="w-4 h-4 ml-2"/>
             </Button>
         </DialogFooter>
       </DialogContent>
