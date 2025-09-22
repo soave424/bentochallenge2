@@ -12,11 +12,12 @@ import {
 import { Button } from '@/components/ui/button';
 import type { Player } from '@/lib/types';
 import { calculatePlayerScore } from '@/lib/scoring';
-import { Crown, Leaf, Smile, Utensils, Sparkles, ArrowRight } from 'lucide-react';
+import { Crown, Leaf, Smile, Utensils, Sparkles, ArrowRight, FileText } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
+import DetailedResults from './DetailedResults';
 
 interface ResultsDialogProps {
   players: Player[];
@@ -25,6 +26,9 @@ interface ResultsDialogProps {
 
 const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
     const [showBonuses, setShowBonuses] = useState(false);
+    const [showDetailedResults, setShowDetailedResults] = useState(false);
+    
+    const humanPlayer = useMemo(() => players.find(p => p.isHuman), [players]);
 
     const scores = useMemo(() => players.map(p => calculatePlayerScore(p, showBonuses)), [players, showBonuses]);
 
@@ -43,6 +47,7 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
 
 
     return (
+    <>
     <Dialog open={true}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
@@ -79,12 +84,10 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
                             <div className="mt-2 pt-2 border-t border-background space-y-1">
                                 {bonusDetails.map((detail, i) => (
                                     <div key={i} className="flex justify-between items-center text-xs">
-                                        <div className="text-muted-foreground flex items-center">
-                                            <Badge variant={detail.value > 0 ? "default" : "destructive"} className="mr-2 text-xs w-auto justify-center whitespace-nowrap px-1.5 py-0">
-                                                {detail.value > 0 ? `+${detail.value}` : detail.value} {detail.metric === 'total' ? '만족도' : detail.metric}
-                                            </Badge>
-                                            {detail.cardName}
-                                        </div>
+                                        <p className="text-muted-foreground">{detail.cardName}</p>
+                                        <Badge variant={detail.value > 0 ? "default" : "destructive"} className="text-xs whitespace-nowrap">
+                                            {detail.value > 0 ? `+${detail.value}` : detail.value} {detail.metric === 'total' ? '만족도' : detail.metric}
+                                        </Badge>
                                     </div>
                                 ))}
                             </div>
@@ -111,7 +114,7 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
                 </div>
             </div>
         </ScrollArea>
-        <DialogFooter className="mt-6 gap-2">
+        <DialogFooter className="mt-6 flex-col gap-2">
             {!showBonuses && (
                 <Button onClick={() => setShowBonuses(true)} className="w-full">
                     <Sparkles className="w-4 h-4 mr-2"/>
@@ -119,10 +122,24 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
                     <ArrowRight className="w-4 h-4 ml-2"/>
                 </Button>
             )}
+             {showBonuses && humanPlayer && (
+                 <Button onClick={() => setShowDetailedResults(true)} className="w-full" variant="secondary">
+                    <FileText className="w-4 h-4 mr-2"/>
+                    결과 상세보기
+                </Button>
+             )}
           <Button onClick={onRestart} className="w-full" variant={showBonuses ? "default" : "outline"}>다시 시작</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    {showDetailedResults && humanPlayer && (
+        <DetailedResults
+            player={humanPlayer}
+            finalScore={scores.find(s => s.player.id === humanPlayer.id)!}
+            onClose={() => setShowDetailedResults(false)}
+        />
+    )}
+    </>
   );
 };
 

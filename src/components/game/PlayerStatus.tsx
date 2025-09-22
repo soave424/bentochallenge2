@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Leaf, Smile, Utensils, Award, Coins } from 'lucide-react';
+import { Leaf, Smile, Utensils, Award, Coins, HelpCircle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { INITIAL_SEEDS } from '@/lib/constants';
 import { calculatePlayerScore } from '@/lib/scoring';
@@ -160,15 +160,17 @@ const PlayerStatus = ({ player, isCurrent, isCompact = false }: PlayerStatusProp
             <>
                 <Separator className="my-3"/>
                 <h4 className="font-semibold mb-2 flex items-center gap-2"><Award className="w-4 h-4"/> 보너스 카드</h4>
-                <div className="flex flex-wrap gap-1 mt-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                     {player.bonusCards.map((card, i) => (
-                        <TooltipProvider key={`${card.id}-${i}`}>
+                       <TooltipProvider key={`${card.id}-${i}`}>
                             <Tooltip>
                                 <TooltipTrigger>
-                                <Badge variant={card.type === 'Campaign' ? 'default' : 'destructive'} className="bg-opacity-70">{card.name}</Badge>
+                                    <div className="w-12 h-16 bg-muted rounded-md flex items-center justify-center border-2 border-dashed border-primary/50">
+                                        <HelpCircle className="w-6 h-6 text-primary/80"/>
+                                    </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>{card.description}</p>
+                                    <p>비밀 보너스 카드</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>

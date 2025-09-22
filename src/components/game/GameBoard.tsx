@@ -69,8 +69,8 @@ const GameBoard = () => {
 
   const advanceToNextPlayer = useCallback(() => {
     const nextIndex = currentPlayerIndex + 1;
-
     if (nextIndex >= players.length) {
+      // All players have taken their turn in the current round
       setIsRoundSummaryOpen(true);
       if (round >= CATEGORIES.length - 1) {
         setGamePhase('game_over');
@@ -80,11 +80,7 @@ const GameBoard = () => {
     } else {
       setCurrentPlayerIndex(nextIndex);
       const nextPlayer = players[nextIndex];
-      if (nextPlayer.isHuman) {
-        setGamePhase('rolling');
-      } else {
-        setGamePhase('ai_turn');
-      }
+      setGamePhase(nextPlayer.isHuman ? 'rolling' : 'ai_turn');
     }
   }, [currentPlayerIndex, players, round]);
 
@@ -111,7 +107,7 @@ const GameBoard = () => {
   const advanceRound = () => {
     setIsRoundSummaryOpen(false);
     const nextRound = round + 1;
-    
+
     // Sort players by score for the new turn order
     const newPlayerOrder = [...players].sort((a, b) => {
         const scoreA = a.bento.reduce((acc, i) => acc + i.taste + i.convenience + i.eco, 0);
@@ -207,8 +203,8 @@ const GameBoard = () => {
       ));
 
       toast({
-        title: '보너스 카드!',
-        description: `${currentPlayer.name}님이 '${randomCard.name}' 카드를 받았습니다!`,
+        title: '보너스 카드 획득!',
+        description: `${currentPlayer.name}님이 보너스 카드를 받았습니다!`,
       });
     }
     setGamePhase('buying');
@@ -293,7 +289,7 @@ const GameBoard = () => {
                 ? { ...p, bonusCards: [...p.bonusCards, randomCard] }
                 : p
             ));
-            toast({ title: '보너스 카드!', description: `${ai.name}님이 '${randomCard.name}' 카드를 받았습니다!` });
+            toast({ title: '보너스 카드 획득!', description: `${ai.name}님이 보너스 카드를 받았습니다!` });
           }
       }, 2500);
 
@@ -352,17 +348,6 @@ const GameBoard = () => {
     return <GameLoading />;
   }
   
-  const renderNextRoundButton = () => {
-    if (gamePhase !== 'round_end') return null;
-    return (
-        <div className="absolute inset-x-0 bottom-0 p-4 bg-background/80 backdrop-blur-sm flex justify-center lg:relative lg:bg-transparent lg:bottom-auto lg:p-0">
-            <Button size="lg" onClick={advanceRound} className="w-full lg:w-auto animate-pulse">
-                다음 라운드로 <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-        </div>
-    )
-  }
-
   return (
     <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 p-4 md:p-6 relative">
        <div className="absolute top-2 right-2 md:top-4 md:right-4">
