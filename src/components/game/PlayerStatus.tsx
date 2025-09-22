@@ -122,6 +122,7 @@ const PlayerStatus = ({ player, isCurrent, isCompact = false }: PlayerStatusProp
             <CardTitle className="text-xl font-headline">{player.name} {player.isHuman && '(나)'}</CardTitle>
               <div className="flex items-center gap-2">
                 <Coins className="w-5 h-5 text-amber-500"/>
+                 <span className="font-semibold text-sm">({player.seeds}/{INITIAL_SEEDS})</span>
                 <div className="flex items-center gap-0.5">
                   {Array.from({ length: INITIAL_SEEDS }).map((_, i) => (
                       <div key={i} className={cn("w-2 h-4 rounded-sm", i < player.seeds ? 'bg-amber-400' : 'bg-muted')}/>
