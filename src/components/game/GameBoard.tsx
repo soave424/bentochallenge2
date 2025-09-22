@@ -94,17 +94,14 @@ const GameBoard = () => {
     setPlayers(newPlayerOrder);
     
     const firstPlayerIndex = 0;
+    setCurrentPlayerIndex(firstPlayerIndex);
+    const firstPlayer = newPlayerOrder[firstPlayerIndex];
     
-    // 상태 업데이트가 반영될 시간을 주기 위해 timeout 사용
-    setTimeout(() => {
-      setCurrentPlayerIndex(firstPlayerIndex);
-      const firstPlayer = newPlayerOrder[firstPlayerIndex];
-      if (firstPlayer.isHuman) {
-        setGamePhase('rolling');
-      } else {
-        setGamePhase('ai_turn');
-      }
-    }, 100);
+    if (firstPlayer.isHuman) {
+      setGamePhase('rolling');
+    } else {
+      setGamePhase('ai_turn');
+    }
   }
 
   const initializeGame = useCallback(async () => {
@@ -434,3 +431,5 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
+
+    
