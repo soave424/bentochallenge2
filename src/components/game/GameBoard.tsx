@@ -6,7 +6,6 @@ import type { Player, GamePhase, MenuItem, BonusCard, Category } from '@/lib/typ
 import { INITIAL_SEEDS, NUM_VIRTUAL_PLAYERS } from '@/lib/constants';
 import { bonusCards, initialMenuItems } from '@/data/game-data';
 import { getMenuItems, saveMenuItems } from '@/lib/game-data-service';
-import { getVirtualPlayerChoices } from '@/app/actions';
 import { CATEGORIES }from '@/lib/types';
 import { shuffle, cn } from '@/lib/utils';
 import { ChevronsRight, Settings, Loader2, ArrowRight } from 'lucide-react';
@@ -72,17 +71,12 @@ const GameBoard = () => {
     if (nextIndex >= players.length) {
       // All players have taken their turn in the current round
       setIsRoundSummaryOpen(true);
-       if (round >= CATEGORIES.length - 1) {
-        setGamePhase('game_over');
-      } else {
-        setGamePhase('round_end');
-      }
     } else {
       setCurrentPlayerIndex(nextIndex);
       const nextPlayer = players[nextIndex];
       setGamePhase(nextPlayer.isHuman ? 'rolling' : 'ai_turn');
     }
-  }, [currentPlayerIndex, players, round]);
+  }, [currentPlayerIndex, players]);
 
 
   const canHumanPlayerSkip = useMemo(() => {
@@ -106,6 +100,12 @@ const GameBoard = () => {
 
   const advanceRound = () => {
     setIsRoundSummaryOpen(false);
+    
+    if (round >= CATEGORIES.length - 1) {
+        setGamePhase('game_over');
+        return;
+    }
+
     const nextRound = round + 1;
 
     // Sort players by score for the new turn order
@@ -153,16 +153,8 @@ const GameBoard = () => {
     let initialPlayers: Player[] = [human];
 
     if (NUM_VIRTUAL_PLAYERS > 0) {
-       const aiChoices = await getVirtualPlayerChoices({
-        availableSeeds: INITIAL_SEEDS,
-        menuItems: currentMenuItems.map(m => ({
-          id: m.id, name: m.name, price: m.price, taste: m.taste, convenience: m.convenience, eco: m.eco,
-        })),
-        numVirtualPlayers: NUM_VIRTUAL_PLAYERS,
-      });
-      
       const virtualPlayers: Player[] = Array.from({ length: NUM_VIRTUAL_PLAYERS }).map((_, i) => ({
-        id: `player-ai-${i}`, name: virtualPlayerNames[i % virtualPlayerNames.length], isHuman: false, seeds: INITIAL_SEEDS, bento: [], bonusCards: [], aiShoppingList: aiChoices.playerChoices[i]?.itemIds || [],
+        id: `player-ai-${i}`, name: virtualPlayerNames[i % virtualPlayerNames.length], isHuman: false, seeds: INITIAL_SEEDS, bento: [], bonusCards: [], aiShoppingList: [],
       }));
       initialPlayers.push(...virtualPlayers);
     }
@@ -296,16 +288,8 @@ const GameBoard = () => {
             const availableCategoryItems = shopItems.filter(item => !purchasedItemIds.includes(item.id) && ai.seeds >= item.price);
 
             if (availableCategoryItems.length > 0) {
-                let itemToBuy: MenuItem | undefined;
-                const shoppingListItems = availableCategoryItems.filter(item => (ai.aiShoppingList || []).includes(item.id));
-
-                if(shoppingListItems.length > 0) {
-                    // Buy the most expensive item from their shopping list they can afford
-                    itemToBuy = shoppingListItems.sort((a,b) => b.price - a.price)[0];
-                } else {
-                    // If no shopping list items are available, buy the most expensive available item
-                    itemToBuy = availableCategoryItems.sort((a,b) => b.price - a.price)[0];
-                }
+                // If no shopping list items are available, buy the most expensive available item
+                const itemToBuy = availableCategoryItems.sort((a,b) => b.price - a.price)[0];
 
                 if (itemToBuy) {
                     let finalSeeds = ai.seeds - itemToBuy.price;
@@ -317,7 +301,6 @@ const GameBoard = () => {
                         ...ai,
                         seeds: finalSeeds,
                         bento: [...ai.bento, itemToBuy],
-                        aiShoppingList: (ai.aiShoppingList || []).filter(id => id !== itemToBuy!.id)
                     };
                     
                     setPlayers(prev => prev.map(p => p.id === ai.id ? updatedAiPlayer : p));
@@ -374,7 +357,7 @@ const GameBoard = () => {
           round={round + 1} 
           category={currentCategory}
           purchasedItemIds={purchasedItemIds}
-          showNextRoundButton={gamePhase === 'round_end'}
+          showNextRoundButton={isRoundSummaryOpen}
           onNextRound={advanceRound}
         />
       </div>
@@ -414,7 +397,7 @@ const GameBoard = () => {
         </div>
       </div>
        
-      {isRoundSummaryOpen && (
+      {isRoundSummaryOpen && gamePhase !== 'game_over' && (
         <RoundSummary
           players={players}
           round={round}
