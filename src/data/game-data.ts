@@ -28,7 +28,7 @@ export const initialMenuItems: MenuItem[] = [
   { id: '24', name: '캔 음료', category: 'Drink', price: 3, taste: 1, convenience: 2, eco: -1, image: 'https://gi.esmplus.com/agnesey77/%EB%AF%B8%EB%8B%88%EC%BA%94/%EB%AF%B8%EB%8B%88%EC%BA%943%EC%A2%85%EC%B9%A0%EC%BD%9C%ED%99%98B.png', imageHint: 'can drink' },
   { id: '26', name: '종이팩 음료', category: 'Drink', price: 3, taste: 1, convenience: 2, eco: 1, image: 'https://img1.newsis.com/2021/10/07/NISI20211007_0000841908_web.jpg', imageHint: 'paper-pack drink' },
   { id: '28', name: '로컬 무첨가 주스', category: 'Drink', price: 4, taste: 2, convenience: 0, eco: 3, image: 'https://oasisprodproduct.edge.naverncp.com/100566/detail/1_c64af169-e2e2-42d1-b1af-4c5e5918de25.JPG', imageHint: 'local juice' },
-  { id: '29', name: '보리차', category: 'Drink', price: 3, taste: 1, convenience: 1, eco: 2, image: 'https://i.namu.wiki/i/pHbLS5l9zED9UqLcMe6CEjFQnPtDW9lZJR3tFI7UuDk_X_xxKFEpd7SVfTJBNTdLvUqd0stG56wRVIjClnKegA.webp', imageHint: 'barley tea' },
+  { id: '29', name: '보리차', category: 'Drink', price: 3, taste: 1, convenience: 1, eco: 2, image: 'https://m.health.chosun.com/site/data/img_dir/2025/06/02/2025060202587_0.jpg', imageHint: 'barley tea' },
   { id: '30', name: '카페 아이스커피', category: 'Drink', price: 4, taste: 2, convenience: 2, eco: -2, image: 'https://www.coffeebeankorea.com/data/menu/%EC%B9%B4%ED%8E%98%EB%AA%A8%EC%B9%B4IB.jpg', imageHint: 'iced coffee' },
 
   // 라운드 4: 용기
@@ -48,7 +48,7 @@ export const initialMenuItems: MenuItem[] = [
   { id: '45', name: '수입 초콜릿', category: 'Snack', price: 3, taste: 2, convenience: 1, eco: -1, image: 'https://webimage.10x10.co.kr/image/basic600/93/B000937716.jpg', imageHint: 'imported chocolate' },
   { id: '47', name: '지역 빵집 크로와상', category: 'Snack', price: 3, taste: 2, convenience: 0, eco: 2, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwEA5vMkQ016qUe5IiJcACrG-zzDAUpgPY8g&s', imageHint: 'local croissant' },
   { id: '48', name: '냉동 찐빵', category: 'Snack', price: 2, taste: 1, convenience: 1, eco: 0, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7JbcBe5DbPYOwkMhysBCqZ2oojRpE5InWRA&s', imageHint: 'frozen bun' },
-  { id: '49', name: '로컬 꿀약과', category: 'Snack', price: 3, taste: 1, convenience: 0, eco: 3, image: 'https://sojoong.joins.com/wp-content/uploads/sites/4/2023/08/IKS04949.jpg', imageHint: 'local honey-cookie' },
+  { id: '49', name: '로컬 꿀약과', category: 'Snack', price: 3, taste: 1, convenience: 0, eco: 3, image: 'https://moongchi.kr/web/product/big/202201/1f4a0ba88febf94f9c7ab98edee72ca2.jpg', imageHint: 'local honey-cookie' },
   { id: '50', name: '컵떡볶이', category: 'Snack', price: 3, taste: 2, convenience: 2, eco: -2, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2RQTKoni-mUZhp0NL3qgtJ9eZIdWNzR2pFA&s', imageHint: 'cup tteokbokki' },
 ];
 
