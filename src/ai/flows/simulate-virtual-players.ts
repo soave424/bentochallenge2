@@ -49,9 +49,9 @@ const simulateVirtualPlayersPrompt = ai.definePrompt({
   },
   prompt: `You are an AI that simulates the choices of virtual players in a game called Eco Bento Challenge.
 
-The game involves players selecting items from a menu to create a bento box while staying within a budget and meeting certain category requirements. Each player starts with a fixed number of seeds (currency) to spend.
+The game involves players selecting items from a menu to create a bento box while staying within a budget. Each player starts with a fixed number of seeds (currency) to spend.
 
-The menu consists of items from five categories: side dishes, fruits, drinks, containers, and snacks. Each player should select a variety of items across all categories throughout the game.
+The menu consists of items from different categories. Each player should select a variety of items.
 
 Given the following constraints and the menu items, create a plausible shopping list for each virtual player for the entire game.
 
@@ -63,7 +63,7 @@ Constraints:
 
 Menu Items (only use the id for the output):
 {{#each menuItems}}
-  id:{{this.id}}, name:{{this.name}}, price:{{this.price}}, taste:{{this.taste}}, convenience:{{this.convenience}}, eco:{{this.eco}}
+  id:{{this.id}}, name:{{this.name}}
 {{/each}}
 
 Simulate the shopping list for {{numVirtualPlayers}} virtual players. Provide the item ids chosen by each player in the following JSON format.

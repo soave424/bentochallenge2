@@ -71,4 +71,15 @@ export interface Score {
   total: number;
 }
 
-    
+export interface BonusDetail {
+    cardName: string;
+    metric: 'taste' | 'convenience' | 'eco' | 'total';
+    value: number;
+}
+
+export interface ScoreWithBonuses {
+    player: Player;
+    score: Omit<Score, 'total'>;
+    total: number;
+    bonusDetails: BonusDetail[];
+}
