@@ -37,7 +37,7 @@ const RoundSummary = ({ players, round, onNextRound }: RoundSummaryProps) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[50px]">순위</TableHead>
+                <TableHead className="w-[50px] whitespace-nowrap">순위</TableHead>
                 <TableHead>플레이어</TableHead>
                 <TableHead className="text-right">맛</TableHead>
                 <TableHead className="text-right">편리함</TableHead>
