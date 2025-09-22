@@ -89,18 +89,18 @@ const GameBoard = () => {
     const nextRound = round + 1;
     const newPlayerOrder = shuffle([...players]);
     const firstPlayerIndex = 0;
-    const firstPlayer = newPlayerOrder[firstPlayerIndex];
-
-    if (firstPlayer.isHuman) {
-      setGamePhase('rolling');
-    } else {
-      setGamePhase('ai_turn');
-    }
     
     setPurchasedItemIds([]);
     setRound(nextRound);
     setPlayers(newPlayerOrder);
     setCurrentPlayerIndex(firstPlayerIndex);
+
+    const firstPlayer = newPlayerOrder[firstPlayerIndex];
+    if (firstPlayer.isHuman) {
+      setGamePhase('rolling');
+    } else {
+      setGamePhase('ai_turn');
+    }
   }
 
   const initializeGame = useCallback(async () => {

@@ -82,7 +82,7 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
                                 {bonusDetails.map((detail, i) => (
                                     <div key={i} className="flex justify-between items-center text-xs">
                                         <div className="text-muted-foreground flex items-center">
-                                            <Badge variant={detail.value > 0 ? "default" : "destructive"} className="mr-2 text-xs w-16 justify-center">
+                                            <Badge variant={detail.value > 0 ? "default" : "destructive"} className="mr-2 text-xs w-auto justify-center whitespace-nowrap">
                                                 {detail.value > 0 ? `+${detail.value}` : detail.value} {detail.metric === 'total' ? '만족도' : detail.metric}
                                             </Badge>
                                             {detail.cardName}
@@ -129,3 +129,5 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
 };
 
 export default ResultsDialog;
+
+    
