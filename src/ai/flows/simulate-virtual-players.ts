@@ -66,9 +66,6 @@ Menu Items (only use the id for the output):
 {{/each}}
 
 Simulate the shopping list for {{numVirtualPlayers}} virtual players. Provide the item ids chosen by each player in the following JSON format.
-\`\`\`json
-{{jsonStringify output.schema}}
-\`\`\`
 `,
 });
 

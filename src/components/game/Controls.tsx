@@ -30,11 +30,10 @@ const Controls = ({ phase, dice, onRoll, onSkip, canSkip }: ControlsProps) => {
   const [displayDice, setDisplayDice] = useState<[number,number]>(dice);
 
   useEffect(() => {
-    // When it's not the human player's turn to roll, show the actual dice from props
-    if (phase !== 'rolling') {
-        setDisplayDice(dice);
+    if (phase !== 'rolling' || !isRolling) {
+      setDisplayDice(dice);
     }
-  }, [dice, phase]);
+  }, [dice, phase, isRolling]);
 
   const handleRoll = () => {
     if (phase !== 'rolling' || isRolling) return;
@@ -50,14 +49,12 @@ const Controls = ({ phase, dice, onRoll, onSkip, canSkip }: ControlsProps) => {
       if (counter > 10) {
         clearInterval(interval);
         setIsRolling(false);
-        onRoll(); // onRoll now calculates dice inside GameBoard
+        onRoll();
       }
     }, 100);
   };
   
   const handleGetRecommendation = async () => {
-      // This function is not fully implemented in the provided context
-      // but we keep the structure.
       setIsRecommendationLoading(true);
       // Mock API call for now
       setTimeout(() => {
