@@ -40,11 +40,6 @@ const GameBoard = () => {
   const canHumanPlayerSkip = useMemo(() => {
     if (!humanPlayer || !currentCategory || gamePhase !== 'buying') return false;
     
-    const hasBoughtFromCategory = humanPlayer.bento.some(i => i.category === currentCategory);
-    if(hasBoughtFromCategory){
-      return false; // Already bought, must wait for next turn. No skipping.
-    }
-    
     // Check if there are any affordable items left in the current shop category
     const canAffordAny = shopItems.some(item => 
         !purchasedItemIds.includes(item.id) && humanPlayer.seeds >= item.price
@@ -99,7 +94,6 @@ const GameBoard = () => {
     setGamePhase('player_turn');
   }
 
-
   const initializeGame = useCallback(async () => {
     setGamePhase('loading');
     
@@ -125,13 +119,13 @@ const GameBoard = () => {
        const aiChoices = await getVirtualPlayerChoices({
         availableSeeds: INITIAL_SEEDS,
         menuItems: currentMenuItems.map(m => ({
-          number: m.id, name: m.name, price: m.price, taste: m.taste, convenience: m.convenience, eco: m.eco,
+          id: m.id, name: m.name, price: m.price, taste: m.taste, convenience: m.convenience, eco: m.eco,
         })),
         numVirtualPlayers: NUM_VIRTUAL_PLAYERS,
       });
 
       const virtualPlayers: Player[] = Array.from({ length: NUM_VIRTUAL_PLAYERS }).map((_, i) => ({
-        id: `player-ai-${i}`, name: virtualPlayerNames[i], isHuman: false, seeds: INITIAL_SEEDS, bento: [], bonusCards: [], aiShoppingList: aiChoices.playerChoices[i]?.itemNumbers || [], eliminated: false,
+        id: `player-ai-${i}`, name: virtualPlayerNames[i], isHuman: false, seeds: INITIAL_SEEDS, bento: [], bonusCards: [], aiShoppingList: aiChoices.playerChoices[i]?.itemIds || [], eliminated: false,
       }));
       initialPlayers.push(...virtualPlayers);
     }
@@ -241,7 +235,6 @@ const GameBoard = () => {
   
   const handleSkipTurn = () => {
     if (gamePhase !== 'buying' || !currentPlayer.isHuman || !canHumanPlayerSkip) {
-        toast({ title: "구매 필요!", description: `이번 라운드의 아이템을 구매해야 합니다.`, variant: 'destructive' });
         return;
     }
     
