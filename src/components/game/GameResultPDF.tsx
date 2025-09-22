@@ -5,13 +5,13 @@ import { Player, ScoreWithBonuses, CATEGORIES, CATEGORY_NAMES, MenuItem } from '
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
-interface GameResultPDFProps {
+interface GameResultImageProps {
     player: Player;
     finalScore: ScoreWithBonuses;
     comments: string;
 }
 
-const GameResultPDF = React.forwardRef<HTMLDivElement, GameResultPDFProps>(({ player, finalScore, comments }, ref) => {
+const GameResultImage = React.forwardRef<HTMLDivElement, GameResultImageProps>(({ player, finalScore, comments }, ref) => {
 
     const renderBentoItem = (item: MenuItem) => (
         <div key={item.id} className="p-2 border rounded-md text-center bg-gray-50">
@@ -21,7 +21,7 @@ const GameResultPDF = React.forwardRef<HTMLDivElement, GameResultPDFProps>(({ pl
     );
     
     return (
-        <div ref={ref} className="p-8 bg-white text-gray-900 font-sans">
+        <div ref={ref} className="p-8 bg-white text-gray-900 font-sans w-[800px]">
             <header className="text-center mb-8">
                 <h1 className="text-3xl font-bold text-green-700">친환경 소비를 고려하는 똑똑한 소비자</h1>
                 <p className="text-xl mt-2">{player.name}님의 게임 결과</p>
@@ -75,5 +75,5 @@ const GameResultPDF = React.forwardRef<HTMLDivElement, GameResultPDFProps>(({ pl
     );
 });
 
-GameResultPDF.displayName = 'GameResultPDF';
-export default GameResultPDF;
+GameResultImage.displayName = 'GameResultImage';
+export default GameResultImage;

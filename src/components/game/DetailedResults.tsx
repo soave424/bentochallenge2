@@ -1,13 +1,13 @@
 
 'use client';
-import { useRef, useState } from 'react';
-import { useReactToPrint } from 'react-to-print';
+import { useRef, useState, useCallback } from 'react';
+import * as htmlToImage from 'html-to-image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Player, ScoreWithBonuses, CATEGORIES, CATEGORY_NAMES } from '@/lib/types';
-import GameResultPDF from './GameResultPDF';
+import GameResultImage from './GameResultImage';
 import { Download, Loader2 } from 'lucide-react';
 
 interface DetailedResultsProps {
@@ -18,15 +18,28 @@ interface DetailedResultsProps {
 
 const DetailedResults = ({ player, finalScore, onClose }: DetailedResultsProps) => {
   const [comments, setComments] = useState('');
-  const [isPrinting, setIsPrinting] = useState(false);
-  const pdfContentRef = useRef<HTMLDivElement>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const imageContentRef = useRef<HTMLDivElement>(null);
 
-  const handlePrint = useReactToPrint({
-    content: () => pdfContentRef.current,
-    documentTitle: `${player.name}-EcoBentoChallenge-Results`,
-    onBeforeGetContent: () => setIsPrinting(true),
-    onAfterPrint: () => setIsPrinting(false),
-  });
+  const handleSaveAsImage = useCallback(() => {
+    if (imageContentRef.current === null) {
+      return;
+    }
+    setIsSaving(true);
+    htmlToImage.toPng(imageContentRef.current, { cacheBust: true, pixelRatio: 2 })
+      .then((dataUrl) => {
+        const link = document.createElement('a');
+        link.download = `${player.name}-EcoBentoChallenge-Results.png`;
+        link.href = dataUrl;
+        link.click();
+        setIsSaving(false);
+      })
+      .catch((err) => {
+        console.error('oops, something went wrong!', err);
+        setIsSaving(false);
+      });
+  }, [imageContentRef, player.name]);
+
 
   return (
     <Dialog open={true} onOpenChange={open => !open && onClose()}>
@@ -39,9 +52,9 @@ const DetailedResults = ({ player, finalScore, onClose }: DetailedResultsProps) 
         </DialogHeader>
 
         <ScrollArea className="max-h-[60vh] p-1">
-            <div style={{ display: 'none' }}>
-                <GameResultPDF 
-                    ref={pdfContentRef}
+            <div style={{ position: 'absolute', left: '-9999px' }}>
+                <GameResultImage 
+                    ref={imageContentRef}
                     player={player} 
                     finalScore={finalScore} 
                     comments={comments} 
@@ -79,9 +92,9 @@ const DetailedResults = ({ player, finalScore, onClose }: DetailedResultsProps) 
         
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>닫기</Button>
-          <Button onClick={handlePrint} disabled={isPrinting}>
-            {isPrinting ? <Loader2 className="w-4 h-4 mr-2 animate-spin"/> : <Download className="w-4 h-4 mr-2"/>}
-            PDF로 저장
+          <Button onClick={handleSaveAsImage} disabled={isSaving}>
+            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin"/> : <Download className="w-4 h-4 mr-2"/>}
+            이미지로 저장
           </Button>
         </DialogFooter>
       </DialogContent>
