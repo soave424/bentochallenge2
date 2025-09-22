@@ -44,7 +44,7 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
     const ecoChamp = [...scores].sort((a, b) => b.score.eco - a.score.eco)[0] ?? null;
     const tasteChamp = [...scores].sort((a, b) => b.score.taste - a.score.taste)[0] ?? null;
     const convenienceChamp = [...scores].sort((a, b) => b.score.convenience - a.score.convenience)[0] ?? null;
-    const humanPlayerBonusCount = humanPlayer?.bonusCards.length ?? 0;
+    const totalBonusCards = useMemo(() => players.reduce((acc, p) => acc + p.bonusCards.length, 0), [players]);
 
     return (
     <>
@@ -74,6 +74,9 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
                             <div className="flex items-center gap-3">
                                 <span className="text-xl font-bold">{index + 1}.</span>
                                 <p className="font-semibold">{player.name}</p>
+                                {!showBonuses && player.bonusCards.length > 0 && (
+                                   <Badge variant="secondary" className="text-xs">보너스 {player.bonusCards.length}장</Badge>
+                                )}
                             </div>
                             <div className="text-right">
                                 <p className="font-bold">소비자 만족도: {total}</p>
@@ -116,9 +119,9 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
         </ScrollArea>
         <DialogFooter className="mt-6 flex-col gap-2 sm:flex-col sm:space-x-0">
             {!showBonuses && (
-                <Button onClick={() => setShowBonuses(true)} className="w-full" disabled={!players.some(p => p.bonusCards.length > 0)}>
+                <Button onClick={() => setShowBonuses(true)} className="w-full" disabled={totalBonusCards === 0}>
                     <Sparkles className="w-4 h-4 mr-2"/>
-                    보너스 카드 적용하기 ({players.reduce((acc, p) => acc + p.bonusCards.length, 0)}장)
+                    보너스 카드 적용하기
                     <ArrowRight className="w-4 h-4 ml-2"/>
                 </Button>
             )}
@@ -134,7 +137,7 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
     </Dialog>
     {showDetailedResults && humanPlayer && (
         <DetailedResults
-            player={humanPlayer}
+            player={scores.find(s => s.player.id === humanPlayer.id)!}
             finalScore={scores.find(s => s.player.id === humanPlayer.id)!}
             onClose={() => setShowDetailedResults(false)}
         />
