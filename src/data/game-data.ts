@@ -12,7 +12,7 @@ export const initialMenuItems: MenuItem[] = [
   { id: '8', name: '전자레인지 돈가스', category: 'Side Dish', price: 4, taste: 2, convenience: 2, eco: -2, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS14XcJcXJ0azpxo4_BWww2hv2JzJPEXZ7TgQ&s', imageHint: 'microwave pork' },
 
   // 라운드 2: 과일
-  { id: '11', name: '수입 체리', category: 'Fruit', price: 4, taste: 2, convenience: 1, eco: -2, image: 'https://img4.yna.co.kr/etc/inner/KR/2016/02/18/AKR20160218061000030_01_i_P2.jpg', imageHint: 'imported cherries' },
+  { id: '11', name: '수입 체리', category: 'Fruit', price: 4, taste: 2, convenience: 1, eco: -2, image: 'https://img.etoday.co.kr/pto_db/2021/12/600/20211207170852_1695026_1199_778.jpg', imageHint: 'imported cherries' },
   { id: '12', name: '깎은 과일팩', category: 'Fruit', price: 3, taste: 2, convenience: 2, eco: -2, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQMx0Q_A1gGkddk9y344IefCPZ63GUkI0sOA&s', imageHint: 'fruit pack' },
   { id: '13', name: '로컬 사과', category: 'Fruit', price: 2, taste: 1, convenience: 0, eco: 3, image: 'https://guryelocalfood.com/web/product/big/202210/0ce66644ca76c6c75f586de411cab589.jpg', imageHint: 'local apple' },
   { id: '15', name: '통째로 가져온 참외', category: 'Fruit', price: 2, taste: 1, convenience: -1, eco: 2, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQBszAXxWPzlBhq0N9GigUh9Su0f0ZHzzVuRjC6nrBTz-1UXWZFhAgPiE1wzVpUWnu7WaY&usqp=CAU', imageHint: 'korean melon' },
@@ -66,5 +66,7 @@ export const bonusCards: BonusCard[] = [
 ];
 
 export const getMenuItemById = (id: string, menuItems: MenuItem[]): MenuItem | undefined => menuItems.find(item => item.id === id);
+
+    
 
     

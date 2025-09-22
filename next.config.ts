@@ -58,8 +58,11 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'sitem.ssgcdn.com' },
       { protocol: 'https', hostname: 'webimage.10x10.co.kr' },
       { protocol: 'https', hostname: 'sojoong.joins.com' },
+      { protocol: 'https', hostname: 'img.etoday.co.kr' },
     ],
   },
 };
 
 export default nextConfig;
+
+    
