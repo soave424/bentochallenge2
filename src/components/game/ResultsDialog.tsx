@@ -44,7 +44,7 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
     const ecoChamp = [...scores].sort((a, b) => b.score.eco - a.score.eco)[0] ?? null;
     const tasteChamp = [...scores].sort((a, b) => b.score.taste - a.score.taste)[0] ?? null;
     const convenienceChamp = [...scores].sort((a, b) => b.score.convenience - a.score.convenience)[0] ?? null;
-
+    const humanPlayerBonusCount = humanPlayer?.bonusCards.length ?? 0;
 
     return (
     <>
@@ -86,7 +86,7 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
                                     <div key={i} className="flex justify-between items-center text-xs">
                                         <p className="text-muted-foreground">{detail.cardName}</p>
                                         <Badge variant={detail.value > 0 ? "default" : "destructive"} className="text-xs whitespace-nowrap">
-                                            {detail.value > 0 ? `+${detail.value}` : detail.value} {detail.metric === 'total' ? '만족도' : detail.metric}
+                                            {detail.metric === 'total' ? '만족도' : detail.metric} {detail.value > 0 ? `+${detail.value}` : detail.value}
                                         </Badge>
                                     </div>
                                 ))}
@@ -116,9 +116,9 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
         </ScrollArea>
         <DialogFooter className="mt-6 flex-col gap-2 sm:flex-col sm:space-x-0">
             {!showBonuses && (
-                <Button onClick={() => setShowBonuses(true)} className="w-full">
+                <Button onClick={() => setShowBonuses(true)} className="w-full" disabled={!players.some(p => p.bonusCards.length > 0)}>
                     <Sparkles className="w-4 h-4 mr-2"/>
-                    보너스 카드 적용하기
+                    보너스 카드 적용하기 ({players.reduce((acc, p) => acc + p.bonusCards.length, 0)}장)
                     <ArrowRight className="w-4 h-4 ml-2"/>
                 </Button>
             )}

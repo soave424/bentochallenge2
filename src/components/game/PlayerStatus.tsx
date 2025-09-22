@@ -142,7 +142,7 @@ const PlayerStatus = ({ player, isCurrent, isCompact = false }: PlayerStatusProp
       <Separator />
       <CardContent className="p-4">
         <h4 className="font-semibold mb-2">내 도시락</h4>
-        <div className="relative w-full aspect-[4/3] bg-secondary/30 rounded-lg p-2 flex items-center justify-center">
+        <div className="relative w-full aspect-square bg-secondary/30 rounded-lg p-2 flex items-center justify-center">
             {container && (
                  <Image
                     src={container.image}
