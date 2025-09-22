@@ -3,12 +3,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Player, GamePhase, MenuItem, BonusCard, Category } from '@/lib/types';
 import { INITIAL_SEEDS, NUM_VIRTUAL_PLAYERS } from '@/lib/constants';
-import { menuItems, bonusCards } from '@/data/game-data';
+import { bonusCards } from '@/data/game-data';
+import { getMenuItems } from '@/lib/game-data-service';
 import { getVirtualPlayerChoices } from '@/app/actions';
 import { CATEGORIES, CATEGORY_NAMES }from '@/lib/types';
 import { calculatePlayerScore } from '@/lib/scoring';
 import { shuffle, cn } from '@/lib/utils';
-import { ChevronsRight } from 'lucide-react';
+import { ChevronsRight, Settings } from 'lucide-react';
 
 import WelcomeDialog from './WelcomeDialog';
 import ResultsDialog from './ResultsDialog';
@@ -17,6 +18,8 @@ import Shop from './Shop';
 import Controls from './Controls';
 import { useToast } from '@/hooks/use-toast';
 import RoundSummary from './RoundSummary';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const GameBoard = () => {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -24,6 +27,7 @@ const GameBoard = () => {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [dice, setDice] = useState<[number, number]>([1, 1]);
   const [shopItems, setShopItems] = useState<MenuItem[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [lastBonusCard, setLastBonusCard] = useState<BonusCard | null>(null);
   const [round, setRound] = useState(0); // 0-indexed, so 0 is round 1
   const [purchasedItemIds, setPurchasedItemIds] = useState<number[]>([]);
@@ -32,6 +36,14 @@ const GameBoard = () => {
   const currentCategory = useMemo(() => CATEGORIES[round], [round]);
   const humanPlayer = useMemo(() => players.find(p => p.isHuman), [players]);
   const currentPlayer = useMemo(() => players[currentPlayerIndex], [players, currentPlayerIndex]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const items = await getMenuItems();
+      setMenuItems(items);
+    };
+    loadData();
+  }, []);
 
   const canHumanPlayerSkip = useMemo(() => {
     if (!humanPlayer || !currentCategory || gamePhase !== 'buying') return false;
@@ -102,11 +114,14 @@ const GameBoard = () => {
     setCurrentPlayerIndex(0);
     setPurchasedItemIds([]);
 
+    const currentMenuItems = await getMenuItems();
+    setMenuItems(currentMenuItems);
+
     const human: Player = {
       id: 'player-human', name: '나', isHuman: true, seeds: INITIAL_SEEDS, bento: [], bonusCards: [], eliminated: false,
     };
     
-    const virtualPlayerNames = ['가상 플레이어 1', '가상 플레이어 2', '가상 플레이어 3'];
+    const virtualPlayerNames = ['가상 플레이어 1', '가상 플레이어 2', '가상 플레이어 3', '가상 플레이어 4', '가상 플레이어 5'];
     let initialPlayers: Player[] = [human];
 
     if (NUM_VIRTUAL_PLAYERS > 0) {
@@ -130,17 +145,17 @@ const GameBoard = () => {
     setPlayers(shuffledPlayers);
     setCurrentPlayerIndex(firstPlayerIndex);
     setGamePhase('player_turn');
-  }, []);
+  }, [menuItems]);
   
   // Update shop items when round changes
   useEffect(() => {
-    if (gamePhase === 'welcome' || gamePhase === 'loading') return;
+    if (gamePhase === 'welcome' || gamePhase === 'loading' || menuItems.length === 0) return;
     setShopItems(menuItems.filter(item => item.category === currentCategory));
-  }, [round, currentCategory, gamePhase]);
+  }, [round, currentCategory, gamePhase, menuItems]);
 
   // Check for eliminated players
   useEffect(() => {
-      if (gamePhase === 'welcome' || gamePhase === 'loading' || players.length === 0) return;
+      if (gamePhase === 'welcome' || gamePhase === 'loading' || players.length === 0 || menuItems.length === 0) return;
   
       const minPriceInGame = Math.min(...menuItems.map(i => i.price));
       
@@ -162,7 +177,7 @@ const GameBoard = () => {
       if (JSON.stringify(updatedPlayers) !== JSON.stringify(players)) {
           setPlayers(updatedPlayers);
       }
-  }, [players, toast, gamePhase]);
+  }, [players, toast, gamePhase, menuItems]);
 
   // Main Game Loop Controller
   useEffect(() => {
@@ -214,12 +229,19 @@ const GameBoard = () => {
   };
   
   const handleSkipTurn = () => {
-      if (canHumanPlayerSkip) {
-          toast({ description: `구매할 아이템이 없거나 이미 구매하여 턴을 넘깁니다.` });
-          nextTurn();
-      } else {
-          toast({ title: "구매 필요!", description: `이번 라운드의 아이템을 아직 구매하지 않았습니다.`, variant: 'destructive' });
-      }
+    const hasBoughtFromCategory = currentPlayer?.bento.some(i => i.category === currentCategory);
+    
+    if (gamePhase === 'buying' && currentPlayer?.isHuman && !hasBoughtFromCategory) {
+       toast({ title: "구매 필요!", description: `이번 라운드의 아이템을 아직 구매하지 않았습니다.`, variant: 'destructive' });
+       return;
+    }
+
+    if (canHumanPlayerSkip) {
+        toast({ description: `구매할 아이템이 없거나 이미 구매하여 턴을 넘깁니다.` });
+        nextTurn();
+    } else {
+        toast({ title: "구매 필요!", description: `이번 라운드의 아이템을 아직 구매하지 않았습니다.`, variant: 'destructive' });
+    }
   };
 
   const handleBuyItem = (item: MenuItem) => {
@@ -348,21 +370,29 @@ const GameBoard = () => {
 
       startAiTurn();
     }
-  }, [gamePhase, currentPlayer, nextTurn, shopItems, toast, currentCategory, purchasedItemIds]);
+  }, [gamePhase, currentPlayer, nextTurn, shopItems, toast, currentCategory, purchasedItemIds, bonusCards]);
   
-
   if (gamePhase === 'welcome') {
     return <WelcomeDialog onStart={initializeGame} />;
   }
   
-  if (gamePhase === 'loading' || !currentCategory || !humanPlayer || !currentPlayer) {
+  if (gamePhase === 'loading' || !currentCategory || !humanPlayer || !currentPlayer || menuItems.length === 0) {
     return <div className="text-xl font-headline">게임 준비 중...</div>
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
+    <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 p-4 relative">
+       <div className="absolute top-0 right-0">
+        <Button asChild variant="outline" size="sm">
+            <Link href="/admin">
+                <Settings className="w-4 h-4 mr-2" />
+                메뉴 수정
+            </Link>
+        </Button>
+      </div>
+
       <div className="lg:col-span-2">
-        <div className="mb-4 p-3 bg-secondary/50 rounded-lg text-center">
+        <div className="mb-4 mt-8 p-3 bg-secondary/50 rounded-lg text-center">
             <p className="text-sm text-muted-foreground">이번 라운드 순서</p>
             <div className="font-semibold text-lg flex items-center justify-center gap-x-4 flex-wrap">
                 {roundTurnOrder.map((name, index) => (
@@ -383,7 +413,7 @@ const GameBoard = () => {
         />
       </div>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 lg:mt-8">
         <Controls
           phase={gamePhase}
           dice={dice}
@@ -420,3 +450,5 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
+
+    

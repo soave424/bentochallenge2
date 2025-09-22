@@ -40,6 +40,7 @@ export interface BonusCard {
   type: BonusCardType;
   name: string;
   description: string;
+  effect: string;
 }
 
 export interface Player {
@@ -69,3 +70,5 @@ export interface Score {
   eco: number;
   total: number;
 }
+
+    
