@@ -204,7 +204,7 @@ const GameBoard = () => {
 
       toast({
         title: '보너스 카드 획득!',
-        description: `${currentPlayer.name}님이 보너스 카드를 받았습니다!`,
+        description: `비밀 보너스 카드를 받았습니다!`,
       });
     }
     setGamePhase('buying');
@@ -289,7 +289,7 @@ const GameBoard = () => {
                 ? { ...p, bonusCards: [...p.bonusCards, randomCard] }
                 : p
             ));
-            toast({ title: '보너스 카드 획득!', description: `${ai.name}님이 보너스 카드를 받았습니다!` });
+            toast({ title: '보너스 카드 획득!', description: `${ai.name}님이 비밀 보너스 카드를 받았습니다!` });
           }
       }, 2500);
 
