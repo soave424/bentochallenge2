@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import type { Player } from '@/lib/types';
 import { calculatePlayerScore } from '@/lib/scoring';
-import { Crown, Leaf, ShoppingBag, Utensils } from 'lucide-react';
+import { Crown, Leaf, Smile, Utensils } from 'lucide-react';
 import { useMemo } from 'react';
 
 interface ResultsDialogProps {
@@ -41,18 +41,18 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
     <Dialog open={true}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-3xl font-headline text-center text-primary">Game Over!</DialogTitle>
+          <DialogTitle className="text-3xl font-headline text-center text-primary">게임 종료!</DialogTitle>
           <DialogDescription className="text-center text-lg">
-            Here are the final results.
+            최종 결과입니다.
           </DialogDescription>
         </DialogHeader>
         <div className="my-4">
           <div className="text-center p-4 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
             <h3 className="text-xl font-bold text-amber-600 dark:text-amber-400 flex items-center justify-center gap-2">
-              <Crown className="w-6 h-6" /> Winner
+              <Crown className="w-6 h-6" /> 최종 우승
             </h3>
             <p className="text-2xl font-headline">{winner?.player.name}</p>
-            <p className="text-sm text-muted-foreground">Total Score: {winner?.score.total}</p>
+            <p className="text-sm text-muted-foreground">총점: {winner?.score.total}</p>
           </div>
         </div>
 
@@ -64,8 +64,8 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
                         <p className="font-semibold">{player.name}</p>
                     </div>
                     <div className="text-right">
-                        <p className="font-bold">Total: {score.total}</p>
-                        <p className="text-xs text-muted-foreground">Taste: {score.taste}, Convenience: {score.convenience}, Eco: {score.eco}</p>
+                        <p className="font-bold">총점: {score.total}</p>
+                        <p className="text-xs text-muted-foreground">맛: {score.taste}, 편리함: {score.convenience}, 친환경: {score.eco}</p>
                     </div>
                  </div>
             ))}
@@ -74,23 +74,23 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-4 text-center text-xs">
             <div className="p-2 bg-green-500/20 rounded">
                 <Leaf className="mx-auto w-5 h-5 text-green-600 dark:text-green-400 mb-1"/>
-                <p className="font-bold">Environmental Guardian</p>
+                <p className="font-bold">친환경 챔피언</p>
                 <p>{ecoChamp.player.name}</p>
             </div>
              <div className="p-2 bg-orange-500/20 rounded">
                 <Utensils className="mx-auto w-5 h-5 text-orange-600 dark:text-orange-400 mb-1"/>
-                <p className="font-bold">Gourmet</p>
+                <p className="font-bold">미식가</p>
                 <p>{tasteChamp.player.name}</p>
             </div>
             <div className="p-2 bg-blue-500/20 rounded">
-                <ShoppingBag className="mx-auto w-5 h-5 text-blue-600 dark:text-blue-400 mb-1"/>
-                <p className="font-bold">Convenience King</p>
+                <Smile className="mx-auto w-5 h-5 text-blue-600 dark:text-blue-400 mb-1"/>
+                <p className="font-bold">편리함의 왕</p>
                 <p>{convenienceChamp.player.name}</p>
             </div>
         </div>
 
         <DialogFooter className="mt-6">
-          <Button onClick={onRestart} className="w-full">Play Again</Button>
+          <Button onClick={onRestart} className="w-full">다시 시작</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

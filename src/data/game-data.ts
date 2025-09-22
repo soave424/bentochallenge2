@@ -63,19 +63,16 @@ export const menuItems: MenuItem[] = [
 ];
 
 export const bonusCards: BonusCard[] = [
-  // Environmental Campaign Cards
-  { id: 'campaign1', type: 'Campaign', name: '텀블러 챌린지', description: '텀블러를 도시락에 포함했다면 +3 친환경 포인트' },
-  { id: 'campaign2', type: 'Campaign', name: '로컬푸드 지지자', description: '로컬 식재료를 포함했다면 +2 친환경 포인트' },
-  { id: 'campaign3', type: 'Campaign', name: '지구지킴이 인증', description: '친환경 점수 10점 이상 달성 시 보너스 소비 만족 +2점' },
-  { id: 'campaign4', type: 'Campaign', name: '물 절약 캠페인', description: '일회용 생수를 선택하지 않았다면 친환경 포인트 +2' },
-  { id: 'campaign5', type: 'Campaign', name: '비닐 제로 선언', description: '비닐봉투/과대포장 제품 모두 미선택 시 추가 포인트 +3' },
-
-  // Plastic Tax Cards
-  { id: 'tax1', type: 'Tax', name: '플라스틱세 부과', description: '일회용 플라스틱 용기 포함 시 소비 만족 점수 -2' },
-  { id: 'tax2', type: 'Tax', name: '페트병 규제', description: '플라스틱 생수, 페트병 주스 선택 시 쇼핑 포인트 1점 차감 (적용되지 않음, 게임 규칙에 쇼핑 포인트가 없음)' },
-  { id: 'tax3', type: 'Tax', name: '과대포장 벌금', description: '과대포장 제품 포함 시 친환경 점수 -3' },
-  { id: 'tax4', type: 'Tax', name: '탄소발자국 경고', description: '수입 식품 2개 이상 고른 경우 총점 -2' },
-  { id: 'tax5', type: 'Tax', name: '1회용 패널티', description: '일회용 젓가락 + 비닐봉투 모두 고른 경우 소비 점수 -3점 (해당 아이템 없음)' },
+  { id: 'campaign1', type: 'Campaign', name: '텀블러 챌린지', description: '텀블러 사용 시 친환경 +3' },
+  { id: 'campaign2', type: 'Campaign', name: '로컬푸드 지지자', description: '로컬/수제 아이템 구매 시 친환경 +2' },
+  { id: 'campaign3', type: 'Campaign', name: '지구지킴이 인증', description: '친환경 10점 이상이면 맛+1, 편리+1' },
+  { id: 'campaign4', type: 'Campaign', name: '물 절약 캠페인', description: '일회용 생수 미구매 시 친환경 +2' },
+  { id: 'campaign5', type: 'Campaign', name: '비닐 제로 선언', description: '과대포장 제품 미구매 시 친환경 +3' },
+  { id: 'tax1', type: 'Tax', name: '플라스틱세 부과', description: '일회용 플라스틱 용기 구매 시 맛-1, 편리-1' },
+  { id: 'tax2', type: 'Tax', name: '페트병 규제', description: '페트병 음료 구매 시 씨앗 1개 차감 (현재 미적용)' },
+  { id: 'tax3', type: 'Tax', name: '과대포장 벌금', description: '과대포장 제품 구매 시 친환경 -3' },
+  { id: 'tax4', type: 'Tax', name: '탄소발자국 경고', description: '수입 식품 2개 이상 구매 시 총점 -2' },
+  { id: 'tax5', type: 'Tax', name: '일회용품 페널티', description: '일회용품 2개 이상 구매 시 소비 점수 -3 (현재 미적용)' },
 ];
 
 export const getItemById = (id: number): MenuItem | undefined => menuItems.find(item => item.id === id);

@@ -1,6 +1,6 @@
 'use client';
 
-import { MenuItem, Category } from '@/lib/types';
+import { MenuItem, Category, CATEGORY_NAMES } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -28,11 +28,11 @@ const Shop = ({ items, onBuy, disabled, category, round }: ShopProps) => {
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-4">
-            <CardTitle className="font-headline text-2xl">Item Shop</CardTitle>
-            <Badge variant="secondary" className="text-lg">Round {round}</Badge>
+            <CardTitle className="font-headline text-2xl">아이템 상점</CardTitle>
+            <Badge variant="secondary" className="text-lg">라운드 {round}</Badge>
         </div>
         <h3 className="text-xl font-semibold font-headline flex items-center gap-2">
-            {categoryIcons[category]} {category}
+            {categoryIcons[category]} {CATEGORY_NAMES[category]}
         </h3>
       </CardHeader>
       <CardContent>
@@ -56,14 +56,14 @@ const Shop = ({ items, onBuy, disabled, category, round }: ShopProps) => {
                         className="object-cover"
                     />
                         <div className="absolute top-1 right-1">
-                        <Badge>{item.price} Seeds</Badge>
+                        <Badge>{item.price} 씨앗</Badge>
                         </div>
                     </div>
                     <div className="p-2 text-center">
                     <p className="text-sm font-semibold truncate">{item.name}</p>
                     </div>
                 </Card>
-                )) : <p className="text-sm text-muted-foreground col-span-full">No items available in this category for this round.</p>}
+                )) : <p className="text-sm text-muted-foreground col-span-full">이 카테고리에는 지금 살 수 있는 아이템이 없습니다.</p>}
             </div>
           </div>
         </ScrollArea>
