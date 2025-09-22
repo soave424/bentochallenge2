@@ -12,7 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const MenuItemSchema = z.object({
-  number: z.number(),
+  id: z.number(),
   name: z.string(),
   price: z.number(),
   taste: z.number(),
@@ -29,8 +29,8 @@ export type SimulateVirtualPlayersInput = z.infer<typeof SimulateVirtualPlayersI
 
 const VirtualPlayerChoicesSchema = z.object({
   playerChoices: z.array(z.object({
-    itemNumbers: z.array(z.number()).describe('The item numbers chosen by the virtual player.'),
-  })).describe('An array of virtual player choices, with each choice indicating the item numbers selected.'),
+    itemIds: z.array(z.number()).describe('The item ids chosen by the virtual player.'),
+  })).describe('An array of virtual player choices, with each choice indicating the item ids selected.'),
 });
 
 export type SimulateVirtualPlayersOutput = z.infer<typeof VirtualPlayerChoicesSchema>;
@@ -62,10 +62,10 @@ Constraints:
 
 Menu Items:
 {{#each menuItems}}
-  {{this.number}}: {{this.name}} (Price: {{this.price}}, Taste: {{this.taste}}, Convenience: {{this.convenience}}, Eco: {{this.eco}})
+  {{this.id}}: {{this.name}} (Price: {{this.price}}, Taste: {{this.taste}}, Convenience: {{this.convenience}}, Eco: {{this.eco}})
 {{/each}}
 
-Simulate the choices for {{numVirtualPlayers}} virtual players. Provide the item numbers chosen by each player in the following JSON format:
+Simulate the choices for {{numVirtualPlayers}} virtual players. Provide the item ids chosen by each player in the following JSON format:
 \`\`\`json
 {{jsonStringify output.schema}}
 \`\`\`

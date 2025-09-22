@@ -36,7 +36,24 @@ const GameBoard = () => {
   const currentCategory = useMemo(() => CATEGORIES[round], [round]);
   const humanPlayer = useMemo(() => players.find(p => p.isHuman), [players]);
   const currentPlayer = useMemo(() => players[currentPlayerIndex], [players, currentPlayerIndex]);
-  
+
+  const canHumanPlayerSkip = useMemo(() => {
+    if (!humanPlayer || !currentCategory || gamePhase !== 'buying') return false;
+    
+    const hasBoughtFromCategory = humanPlayer.bento.some(i => i.category === currentCategory);
+    if(hasBoughtFromCategory){
+      return false; // Already bought, must wait for next turn. No skipping.
+    }
+    
+    // Check if there are any affordable items left in the current shop category
+    const canAffordAny = shopItems.some(item => 
+        !purchasedItemIds.includes(item.id) && humanPlayer.seeds >= item.price
+    );
+    
+    // Can only skip if there are no affordable items left to buy
+    return !canAffordAny;
+  }, [humanPlayer, currentCategory, shopItems, purchasedItemIds, gamePhase]);
+
   const nextTurn = useCallback(() => {
     setCurrentPlayerIndex(prevIndex => {
       let nextIndex = prevIndex + 1;
@@ -52,24 +69,6 @@ const GameBoard = () => {
       return nextIndex;
     });
   }, [players]);
-
-  const canHumanPlayerSkip = useMemo(() => {
-    if (!humanPlayer || !currentCategory || gamePhase !== 'buying') return false;
-    
-    // 이미 이 카테고리에서 샀으면 더 이상 못 사므로, 스킵 가능
-    const hasBoughtFromCategory = humanPlayer.bento.some(i => i.category === currentCategory);
-    if(hasBoughtFromCategory){
-      return true;
-    }
-    
-    // 살 수 있는 아이템이 하나라도 있는지 확인 (품절되지 않았고, 씨앗이 충분한지)
-    const canAffordAny = shopItems.some(item => 
-        !purchasedItemIds.includes(item.id) && humanPlayer.seeds >= item.price
-    );
-    // 살 수 있는 아이템이 없다면 스킵 가능
-    return !canAffordAny;
-  }, [humanPlayer, currentCategory, shopItems, purchasedItemIds, gamePhase]);
-
 
   const roundTurnOrder = useMemo(() => players.map((p, index) => (
     <span key={p.id} className={cn("transition-opacity", index === currentPlayerIndex && "font-bold text-primary animate-pulse")}>
@@ -162,9 +161,9 @@ const GameBoard = () => {
           if (p.eliminated) return p;
           
           // Check for permanent elimination
-          if (p.seeds < minPriceInGame && p.bento.length < CATEGORIES.length) {
-               const canEverAffordAnything = menuItems.some(item => p.seeds >= item.price);
-               if (!canEverAffordAnything) {
+          if (p.seeds < minPriceInGame) {
+               const canEverAffordAnything = menuItems.some(item => p.seeds >= item.price && !p.bento.some(b => b.category === item.category));
+               if (!canEverAffordAnything && p.bento.length < CATEGORIES.length) {
                  if(p.isHuman) {
                      toast({ title: "탈락", description: `씨앗이 부족하여 더 이상 아이템을 구매할 수 없습니다.`, variant: 'destructive'});
                  } else {
@@ -177,16 +176,16 @@ const GameBoard = () => {
           return p;
       });
   
-      if (JSON.stringify(updatedPlayers) !== JSON.stringify(players)) {
+      const wasUpdated = JSON.stringify(updatedPlayers) !== JSON.stringify(players);
+      if (wasUpdated) {
           setPlayers(updatedPlayers);
       }
-  }, [shopItems, players, round, toast, gamePhase, menuItems, currentCategory, purchasedItemIds]);
+  }, [players, gamePhase, menuItems, toast]);
 
   // Main Game Loop Controller
   useEffect(() => {
     if (['welcome', 'loading', 'round_summary', 'game_over'].includes(gamePhase)) return;
     
-    const currentPlayer = players[currentPlayerIndex];
     if (!currentPlayer) {
       if(players.length > 0) {
         const nextAvailablePlayer = players.findIndex(p => !p.eliminated);
@@ -209,7 +208,7 @@ const GameBoard = () => {
             setGamePhase('ai_turn');
         }
     }
-  }, [gamePhase, players, currentPlayerIndex, nextTurn, toast]);
+  }, [gamePhase, players, currentPlayer, currentPlayerIndex, nextTurn, toast]);
 
   const handleRollDice = () => {
     if (gamePhase !== 'rolling') return;
@@ -247,13 +246,14 @@ const GameBoard = () => {
     }
     
     toast({ description: `구매할 아이템이 없거나 이미 구매하여 턴을 넘깁니다.` });
+    setGamePhase('player_turn');
     nextTurn();
   };
 
 
   const handleBuyItem = (item: MenuItem) => {
     if (gamePhase !== 'buying' || !currentPlayer.isHuman) return;
-
+    
     if (purchasedItemIds.includes(item.id)) {
         toast({ title: '품절된 아이템', description: '이 아이템은 이미 다른 플레이어가 구매했습니다.', variant: 'destructive' });
         return;
