@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -9,7 +10,7 @@ import { getVirtualPlayerChoices } from '@/app/actions';
 import { CATEGORIES }from '@/lib/types';
 import { calculatePlayerScore } from '@/lib/scoring';
 import { shuffle, cn } from '@/lib/utils';
-import { ChevronsRight, Settings } from 'lucide-react';
+import { ChevronsRight, Settings, Loader2 } from 'lucide-react';
 
 import WelcomeDialog from './WelcomeDialog';
 import ResultsDialog from './ResultsDialog';
@@ -21,6 +22,33 @@ import RoundSummary from './RoundSummary';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
+
+const GameLoading = () => {
+  const [showSlowLoadingMessage, setShowSlowLoadingMessage] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSlowLoadingMessage(true);
+    }, 15000); // 15 seconds
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 text-center">
+      <div className="flex items-center gap-3 text-xl font-headline">
+        <Loader2 className="animate-spin w-6 h-6" />
+        게임 준비 중...
+      </div>
+      {showSlowLoadingMessage && (
+        <p className="text-sm text-muted-foreground max-w-xs">
+          로딩이 평소보다 오래 걸리고 있습니다. 잠시 후에도 화면이 바뀌지 않으면 페이지를 새로고침해 주세요.
+        </p>
+      )}
+    </div>
+  );
+};
+
 
 const GameBoard = () => {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -48,7 +76,11 @@ const GameBoard = () => {
     }
 
     if (nextIndex >= players.length) {
-      setGamePhase('round_summary');
+       if (round >= CATEGORIES.length - 1) {
+        setGamePhase('game_over');
+      } else {
+        setGamePhase('round_summary');
+      }
     } else {
       setCurrentPlayerIndex(nextIndex);
       const nextPlayer = players[nextIndex];
@@ -58,7 +90,7 @@ const GameBoard = () => {
         setGamePhase('ai_turn');
       }
     }
-  }, [currentPlayerIndex, players, toast]);
+  }, [currentPlayerIndex, players, toast, round]);
 
 
   const canHumanPlayerSkip = useMemo(() => {
@@ -81,11 +113,6 @@ const GameBoard = () => {
   )), [players, currentPlayerIndex]);
 
   const advanceRound = () => {
-    if (round >= CATEGORIES.length - 1) {
-      setGamePhase('game_over');
-      return;
-    }
-
     const nextRound = round + 1;
     const newPlayerOrder = shuffle([...players]);
     const firstPlayerIndex = 0;
@@ -343,7 +370,7 @@ const GameBoard = () => {
   }
   
   if (gamePhase === 'loading' || !humanPlayer || !currentPlayer || menuItems.length === 0) {
-    return <div className="text-xl font-headline">게임 준비 중...</div>
+    return <GameLoading />;
   }
 
   return (
@@ -430,5 +457,7 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
+
+    
 
     
