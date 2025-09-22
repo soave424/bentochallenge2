@@ -7,7 +7,7 @@ import { menuItems, bonusCards } from '@/data/game-data';
 import { getVirtualPlayerChoices } from '@/app/actions';
 import { CATEGORIES, CATEGORY_NAMES } from '@/lib/types';
 import { calculatePlayerScore } from '@/lib/scoring';
-import { shuffle } from '@/lib/utils';
+import { shuffle, cn } from '@/lib/utils';
 import { ChevronsRight } from 'lucide-react';
 
 import WelcomeDialog from './WelcomeDialog';
@@ -33,6 +33,17 @@ const GameBoard = () => {
   const humanPlayer = useMemo(() => players.find(p => p.isHuman), [players]);
   const currentPlayer = useMemo(() => players[currentPlayerIndex], [players, currentPlayerIndex]);
   const roundTurnOrder = useMemo(() => players.map(p => p.name).join(' → '), [players]);
+
+  const canHumanPlayerSkip = useMemo(() => {
+      if (!humanPlayer || !currentCategory) return false;
+      const hasBought = humanPlayer.bento.some(item => item.category === currentCategory);
+      if (hasBought) return true; // Can always "skip" to next turn after buying
+
+      const canAffordAny = shopItems.some(item => 
+          !purchasedItemIds.includes(item.id) && humanPlayer.seeds >= item.price
+      );
+      return !canAffordAny;
+  }, [humanPlayer, currentCategory, shopItems, purchasedItemIds]);
 
   const nextTurn = useCallback(() => {
     const nextPlayerIndex = (currentPlayerIndex + 1);
@@ -93,6 +104,18 @@ const GameBoard = () => {
     const firstPlayer = shuffledPlayers[0];
     setGamePhase(firstPlayer.isHuman ? 'rolling' : 'ai_turn');
   }, []);
+
+  // Check for eliminated players
+  useEffect(() => {
+    const minPrice = Math.min(...menuItems.map(i => i.price));
+    setPlayers(prev => prev.map(p => {
+        if (!p.eliminated && p.seeds < minPrice && p.bento.length < CATEGORIES.length) {
+            toast({ title: "플레이어 탈락", description: `${p.name}님은 씨앗이 부족하여 더 이상 아이템을 구매할 수 없습니다.`, variant: 'destructive'});
+            return { ...p, eliminated: true };
+        }
+        return p;
+    }));
+  }, [players, round]);
 
   useEffect(() => {
     setShopItems(menuItems.filter(item => item.category === currentCategory));
@@ -196,13 +219,11 @@ const GameBoard = () => {
 
                         toast({ title: `${ai.name} 구매!`, description: `${ai.name}이(가) ${itemToBuy.name}을(를) ${itemToBuy.price} 씨앗으로 샀습니다.` });
                     } else {
-                        toast({ description: `${ai.name}은(는) ${CATEGORY_NAMES[currentCategory]}에서 아무것도 사지 못했습니다.` });
+                        toast({ description: `${ai.name}은(는) 씨앗이 부족하여 ${CATEGORY_NAMES[currentCategory]}에서 아무것도 사지 못했습니다.` });
                     }
                 } else {
-                toast({ description: `${ai.name}은(는) ${CATEGORY_NAMES[currentCategory]}에서 아무것도 사지 못했습니다.` });
+                    toast({ description: `${ai.name}은(는) ${CATEGORY_NAMES[currentCategory]}에서 살 수 있는 아이템이 없습니다.` });
                 }
-            } else {
-                toast({ description: `${ai.name}은(는) 이번 라운드에 이미 구매를 마쳤습니다.` });
             }
 
 
@@ -228,7 +249,7 @@ const GameBoard = () => {
 
       }, 1000);
     }
-  }, [gamePhase, currentPlayer, nextTurn, shopItems, toast, currentCategory, purchasedItemIds]);
+  }, [gamePhase, currentPlayer, nextTurn, shopItems, toast, currentCategory, purchasedItemIds, players]);
 
   if (gamePhase === 'welcome') {
     return <WelcomeDialog onStart={initializeGame} />;
@@ -265,6 +286,7 @@ const GameBoard = () => {
           player={humanPlayer}
           shopItems={shopItems}
           onSkip={() => nextTurn()}
+          canSkip={canHumanPlayerSkip}
         />
 
         <div className="space-y-4">

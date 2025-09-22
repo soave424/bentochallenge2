@@ -16,6 +16,7 @@ interface ControlsProps {
   player: Player | undefined;
   shopItems: MenuItem[];
   onSkip: () => void;
+  canSkip: boolean;
 }
 
 const DiceIcon = ({ value }: { value: number }) => {
@@ -24,7 +25,7 @@ const DiceIcon = ({ value }: { value: number }) => {
   return <Icon className="w-10 h-10" />;
 };
 
-const Controls = ({ phase, dice, onRoll, player, shopItems, onSkip }: ControlsProps) => {
+const Controls = ({ phase, dice, onRoll, player, shopItems, onSkip, canSkip }: ControlsProps) => {
   const [isRolling, setIsRolling] = useState(false);
   const [recommendations, setRecommendations] = useState<RecommendBentoItemsOutput['recommendations'] | null>(null);
   const [isRecommendationLoading, setIsRecommendationLoading] = useState(false);
@@ -81,7 +82,7 @@ const Controls = ({ phase, dice, onRoll, player, shopItems, onSkip }: ControlsPr
         >
           {isRolling ? '주사위 굴리는 중...' : '주사위 굴리기'}
         </Button>
-        {phase === 'buying' && (
+        {phase === 'buying' && canSkip && (
              <Button
                 onClick={onSkip}
                 variant="outline"

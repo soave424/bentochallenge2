@@ -13,6 +13,14 @@ export const CATEGORIES: Category[] = [
   'Snack',
 ];
 
+export const CATEGORY_NAMES: Record<Category, string> = {
+  'Side Dish': '식사',
+  'Fruit': '과일',
+  'Drink': '음료',
+  'Container': '용기',
+  'Snack': '간식',
+};
+
 export interface MenuItem {
   id: number;
   name: string;
@@ -60,11 +68,3 @@ export interface Score {
   eco: number;
   total: number;
 }
-
-export const CATEGORY_NAMES: Record<Category, string> = {
-  'Side Dish': '식사',
-  'Fruit': '과일',
-  'Drink': '음료',
-  'Container': '용기',
-  'Snack': '간식',
-};
