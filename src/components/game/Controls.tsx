@@ -82,12 +82,11 @@ const Controls = ({ phase, dice, onRoll, onSkip, canSkip }: ControlsProps) => {
         >
           {isRolling ? '주사위 굴리는 중...' : '주사위 굴리기 (보너스 카드)'}
         </Button>
-        {phase === 'buying' && (
+        {phase === 'buying' && canSkip && (
              <Button
                 onClick={onSkip}
                 variant="outline"
                 className="w-full"
-                disabled={!canSkip}
             >
                 턴 넘기기 <ChevronRight className="w-4 h-4 ml-2"/>
             </Button>
