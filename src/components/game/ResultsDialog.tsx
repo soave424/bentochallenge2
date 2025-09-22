@@ -114,7 +114,7 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
                 </div>
             </div>
         </ScrollArea>
-        <DialogFooter className="mt-6 flex-col gap-2">
+        <DialogFooter className="mt-6 flex-col gap-2 sm:flex-col sm:space-x-0">
             {!showBonuses && (
                 <Button onClick={() => setShowBonuses(true)} className="w-full">
                     <Sparkles className="w-4 h-4 mr-2"/>
