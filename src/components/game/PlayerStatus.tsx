@@ -66,7 +66,7 @@ const BentoSlot = ({ item }: { item?: MenuItem }) => {
                 <TooltipTrigger asChild>
                     <div className="aspect-square bg-muted/50 rounded-md relative overflow-hidden">
                          <Image
-                          src={`https://picsum.photos/seed/${item.image}/100/100`}
+                          src={item.image}
                           alt={item.name}
                           data-ai-hint={item.imageHint}
                           fill
@@ -149,7 +149,7 @@ const PlayerStatus = ({ player, isCurrent, isCompact = false }: PlayerStatusProp
         <div className="relative w-full aspect-[4/3] bg-secondary/30 rounded-lg p-2 flex items-center justify-center">
             {container && (
                  <Image
-                    src={`https://picsum.photos/seed/${container.image}/400/300`}
+                    src={container.image}
                     alt={container.name}
                     data-ai-hint={container.imageHint}
                     fill

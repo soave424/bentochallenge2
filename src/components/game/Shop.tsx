@@ -59,7 +59,7 @@ const Shop = ({ items, onBuy, disabled, category, round, purchasedItemIds }: Sho
                                     >
                                         <div className="aspect-square relative w-full">
                                         <Image
-                                            src={`https://picsum.photos/seed/${item.image}/200/200`}
+                                            src={item.image}
                                             alt={item.name}
                                             data-ai-hint={item.imageHint}
                                             fill
