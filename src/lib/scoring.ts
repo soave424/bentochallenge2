@@ -46,32 +46,32 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
             metric = 'eco'; value = 3;
             ecoBonus += value; applied = true;
           }
-          break;
+          continue;
         case 'campaign2': // 로컬푸드 지지자
           if (countItems(player.bento, item => item.name.includes('로컬') || item.name.includes('수제') || item.name.includes('지역')) > 0) {
             metric = 'eco'; value = 2;
             ecoBonus += value; applied = true;
           }
-          break;
+          continue;
         case 'campaign3': // 지구지킴이 인증 (적용 전 점수 기준)
             const preCheckEco = player.bento.reduce((acc, item) => acc + item.eco, 0);
             if (preCheckEco >= 10) {
                 metric = 'total'; value = 2;
                 totalBonus += value; applied = true;
             }
-            break;
+            continue;
         case 'campaign4': // 물 절약 캠페인
           if (!hasItem(player.bento, '플라스틱 생수')) {
               metric = 'eco'; value = 2;
               ecoBonus += value; applied = true;
           }
-          break;
+          continue;
         case 'campaign5': // 비닐 제로 선언
           if (!hasItem(player.bento, '과대포장 젤리', '포장 핫도그')) { 
               metric = 'eco'; value = 3;
               ecoBonus += value; applied = true;
           }
-          break;
+          continue;
 
         // --- Tax Cards ---
         case 'tax1': // 플라스틱세 부과
@@ -79,28 +79,28 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
             metric = 'total'; value = -2;
             totalBonus += value; applied = true;
           }
-          break;
+          continue;
         case 'tax2': // 페트병 규제 - This is applied directly to seeds in GameBoard, not here.
-          break; 
+          continue; 
         case 'tax3': // 과대포장 벌금
           if (hasItem(player.bento, '과대포장 젤리')) {
             metric = 'eco'; value = -3;
             ecoBonus += value; applied = true;
           }
-          break;
+          continue;
         case 'tax4': // 탄소발자국 경고
             if (countItems(player.bento, item => item.name.includes('수입')) >= 2) {
               metric = 'total'; value = -2;
               totalBonus += value; applied = true;
             }
-            break;
+            continue;
         case 'tax5': // 일회용 페널티
           const disposableCount = countItems(player.bento, item => item.name.startsWith('일회용') || item.name.startsWith('플라스틱') || item.name.startsWith('페트병') || item.name.startsWith('캔'));
           if (disposableCount >= 2) {
               metric = 'total'; value = -3;
               totalBonus += value; applied = true;
           }
-          break;
+          continue;
       }
       
       if(applied) {
