@@ -205,7 +205,7 @@ const GameBoard = () => {
     const canAffordAny = shopItems.some(item => !purchasedItemIds.includes(item.id) && currentPlayer.seeds >= item.price);
     
     if (!hasBoughtFromCategory && canAffordAny) {
-       toast({ title: '턴 넘기기 불가', description: '이번 라운드의 아이템을 아직 구매하지 않았습니다. 아이템을 구매해주세요!', variant: 'destructive' });
+       toast({ title: '턴 넘기기 불가', description: '이번 라운드의 아이템을 아직 구매하지 않았습니다. 구매할 수 있는 아이템이 있습니다.', variant: 'destructive' });
        return;
     }
     
@@ -315,6 +315,12 @@ const GameBoard = () => {
     startAiTurn();
   }, [gamePhase, currentPlayer, advanceToNextPlayer, shopItems, toast, currentCategory, purchasedItemIds]);
   
+  useEffect(() => {
+    if (gamePhase === 'advancing_round') {
+      advanceRound();
+    }
+  }, [gamePhase]);
+
   if (gamePhase === 'welcome') {
     return <WelcomeDialog onStart={initializeGame} />;
   }
@@ -395,7 +401,8 @@ const GameBoard = () => {
         <RoundSummary
           players={players}
           round={round}
-          onNextRound={advanceRound}
+          onNextRound={() => setGamePhase('advancing_round')}
+          onClose={() => setGamePhase(currentPlayer.isHuman ? 'buying' : 'ai_turn')}
           isLastRound={round >= CATEGORIES.length - 1}
         />
       )}
@@ -408,6 +415,3 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
-
-    
-
