@@ -62,7 +62,7 @@ Constraints:
 
 Menu Items:
 {{#each menuItems}}
-  {{this.id}}: {{this.name}} (Price: {{this.price}}, Taste: {{this.taste}}, Convenience: {{this.convenience}}, Eco: {{this.eco}})
+  id:{{this.id}}, name:{{this.name}}, price:{{this.price}}, taste:{{this.taste}}, convenience:{{this.convenience}}, eco:{{this.eco}}
 {{/each}}
 
 Simulate the choices for {{numVirtualPlayers}} virtual players. Provide the item ids chosen by each player in the following JSON format:

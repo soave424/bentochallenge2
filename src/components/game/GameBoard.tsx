@@ -37,18 +37,6 @@ const GameBoard = () => {
   const humanPlayer = useMemo(() => players.find(p => p.isHuman), [players]);
   const currentPlayer = useMemo(() => players[currentPlayerIndex], [players, currentPlayerIndex]);
 
-  const canHumanPlayerSkip = useMemo(() => {
-    if (!humanPlayer || !currentCategory || gamePhase !== 'buying') return false;
-    
-    // Check if there are any affordable items left in the current shop category
-    const canAffordAny = shopItems.some(item => 
-        !purchasedItemIds.includes(item.id) && humanPlayer.seeds >= item.price
-    );
-    
-    // Can only skip if there are no affordable items left to buy
-    return !canAffordAny;
-  }, [humanPlayer, currentCategory, shopItems, purchasedItemIds, gamePhase]);
-
   const nextTurn = useCallback(() => {
     setCurrentPlayerIndex(prevIndex => {
       let nextIndex = prevIndex + 1;
@@ -64,6 +52,21 @@ const GameBoard = () => {
       return nextIndex;
     });
   }, [players]);
+
+  const canHumanPlayerSkip = useMemo(() => {
+    if (!humanPlayer || !currentCategory || gamePhase !== 'buying') return false;
+    
+    // Can skip if already bought an item in this category
+    const hasBoughtFromCategory = humanPlayer.bento.some(i => i.category === currentCategory);
+    if(hasBoughtFromCategory) return true;
+
+    // Can skip if there are no affordable items left in the current shop category
+    const canAffordAny = shopItems.some(item => 
+        !purchasedItemIds.includes(item.id) && humanPlayer.seeds >= item.price
+    );
+    
+    return !canAffordAny;
+  }, [humanPlayer, currentCategory, shopItems, purchasedItemIds, gamePhase]);
 
   const roundTurnOrder = useMemo(() => players.map((p, index) => (
     <span key={p.id} className={cn("transition-opacity", index === currentPlayerIndex && "font-bold text-primary animate-pulse")}>
@@ -147,39 +150,37 @@ const GameBoard = () => {
 
   // Check for eliminated players
   useEffect(() => {
-      if (gamePhase === 'welcome' || gamePhase === 'loading' || players.length === 0 || menuItems.length === 0) return;
+    if (gamePhase === 'welcome' || gamePhase === 'loading' || players.length === 0 || menuItems.length === 0) return;
   
-      const minPriceInGame = Math.min(...menuItems.map(i => i.price));
-      
-      const updatedPlayers = players.map(p => {
-          if (p.eliminated) return p;
-          
-          // Check for permanent elimination
-          if (p.seeds < minPriceInGame) {
-               const canEverAffordAnything = menuItems.some(item => p.seeds >= item.price && !p.bento.some(b => b.category === item.category));
-               if (!canEverAffordAnything && p.bento.length < CATEGORIES.length) {
-                 if(p.isHuman) {
-                     toast({ title: "탈락", description: `씨앗이 부족하여 더 이상 아이템을 구매할 수 없습니다.`, variant: 'destructive'});
-                 } else {
-                     toast({ title: "플레이어 탈락", description: `${p.name}님은 씨앗이 부족하여 더 이상 아이템을 구매할 수 없습니다.`, variant: 'destructive'});
-                 }
-                 return { ...p, eliminated: true };
+    const minPriceInGame = Math.min(...menuItems.map(i => i.price));
+    
+    const updatedPlayers = players.map(p => {
+        if (p.eliminated) return p;
+        
+        if (p.seeds < minPriceInGame) {
+             const canEverAffordAnything = menuItems.some(item => p.seeds >= item.price && !p.bento.some(b => b.category === item.category));
+             if (!canEverAffordAnything && p.bento.length < CATEGORIES.length) {
+               if(p.isHuman) {
+                   toast({ title: "탈락", description: `씨앗이 부족하여 더 이상 아이템을 구매할 수 없습니다.`, variant: 'destructive'});
+               } else {
+                   toast({ title: "플레이어 탈락", description: `${p.name}님은 씨앗이 부족하여 더 이상 아이템을 구매할 수 없습니다.`, variant: 'destructive'});
                }
-          }
+               return { ...p, eliminated: true };
+             }
+        }
+        return p;
+    });
 
-          return p;
-      });
-  
-      const wasUpdated = JSON.stringify(updatedPlayers) !== JSON.stringify(players);
-      if (wasUpdated) {
-          setPlayers(updatedPlayers);
-      }
+    const wasUpdated = JSON.stringify(updatedPlayers) !== JSON.stringify(players);
+    if (wasUpdated) {
+        setPlayers(updatedPlayers);
+    }
   }, [players, gamePhase, menuItems, toast]);
 
   // Main Game Loop Controller
   useEffect(() => {
     if (['welcome', 'loading', 'round_summary', 'game_over'].includes(gamePhase)) return;
-    
+
     if (!currentPlayer) {
       if(players.length > 0) {
         const nextAvailablePlayer = players.findIndex(p => !p.eliminated);
@@ -191,7 +192,10 @@ const GameBoard = () => {
 
     if (currentPlayer.eliminated) {
         toast({description: `${currentPlayer.name}님은 탈락하여 턴을 건너뜁니다.`})
-        setTimeout(() => nextTurn(), 1000);
+        setTimeout(() => {
+          setGamePhase('player_turn');
+          nextTurn();
+        }, 1000);
         return;
     }
 
@@ -234,13 +238,18 @@ const GameBoard = () => {
   };
   
   const handleSkipTurn = () => {
-    if (gamePhase !== 'buying' || !currentPlayer.isHuman || !canHumanPlayerSkip) {
-        return;
-    }
+    if (gamePhase !== 'buying' || !currentPlayer.isHuman) return;
+
+    const hasBoughtFromCategory = currentPlayer.bento.some(i => i.category === currentCategory);
+    const canAffordAny = shopItems.some(item => !purchasedItemIds.includes(item.id) && currentPlayer.seeds >= item.price);
     
-    toast({ description: `구매할 아이템이 없거나 이미 구매하여 턴을 넘깁니다.` });
-    setGamePhase('player_turn');
-    nextTurn();
+    if (hasBoughtFromCategory || !canAffordAny) {
+      toast({ description: hasBoughtFromCategory ? `이미 이 카테고리에서 구매했습니다.` : `구매할 아이템이 없습니다.` });
+      setGamePhase('player_turn');
+      nextTurn();
+    } else {
+       toast({ title: '턴 넘기기 불가', description: '아직 구매할 수 있는 아이템이 있습니다!', variant: 'destructive' });
+    }
   };
 
 
