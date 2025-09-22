@@ -115,7 +115,7 @@ const GameBoard = () => {
         }
         return p;
     }));
-  }, [players, round]);
+  }, [round, toast]);
 
   useEffect(() => {
     setShopItems(menuItems.filter(item => item.category === currentCategory));
