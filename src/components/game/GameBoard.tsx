@@ -72,7 +72,7 @@ const GameBoard = () => {
     if (nextIndex >= players.length) {
       // All players have taken their turn in the current round
       setIsRoundSummaryOpen(true);
-      if (round >= CATEGORIES.length - 1) {
+       if (round >= CATEGORIES.length - 1) {
         setGamePhase('game_over');
       } else {
         setGamePhase('round_end');
@@ -273,10 +273,6 @@ const GameBoard = () => {
     
     const startAiTurn = () => {
       setTimeout(() => {
-        toast({ title: `${ai.name}의 턴`, description: `${ai.name}이(가) 자신의 차례를 시작합니다.`});
-      }, 1000);
-      
-      setTimeout(() => {
           const d1 = Math.floor(Math.random() * 6) + 1;
           const d2 = Math.floor(Math.random() * 6) + 1;
           setDice([d1 as 1 | 2 | 3 | 4 | 5 | 6,d2 as 1 | 2 | 3 | 4 | 5 | 6]);
@@ -291,7 +287,7 @@ const GameBoard = () => {
             ));
             toast({ title: '보너스 카드 획득!', description: `${ai.name}님이 비밀 보너스 카드를 받았습니다!` });
           }
-      }, 2500);
+      }, 1500);
 
       setTimeout(() => {
         const hasBoughtFromCategory = ai.bento.some(i => i.category === currentCategory);
@@ -334,7 +330,7 @@ const GameBoard = () => {
         setTimeout(() => {
           advanceToNextPlayer();
         }, 1500);
-      }, 4000);
+      }, 2500);
     };
 
     startAiTurn();
@@ -434,3 +430,5 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
+
+    
