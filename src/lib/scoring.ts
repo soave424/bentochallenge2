@@ -11,7 +11,7 @@ function countItems(bento: Player['bento'], predicate: (item: MenuItem) => boole
 
 export function calculatePlayerScore(player: Player, applyBonuses: boolean): ScoreWithBonuses {
   
-  const score: Score = {
+  const baseScore: Score = {
     taste: 0,
     convenience: 0,
     eco: 0,
@@ -19,25 +19,26 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
 
   // 1. Base scores from items
   for (const item of player.bento) {
-    score.taste += item.taste;
-    score.convenience += item.convenience;
-    score.eco += item.eco;
+    baseScore.taste += item.taste;
+    baseScore.convenience += item.convenience;
+    baseScore.eco += item.eco;
   }
   
-  const baseTotal = score.taste + score.convenience + score.eco;
-
+  const baseTotal = baseScore.taste + baseScore.convenience + baseScore.eco;
   const bonusDetails: BonusDetail[] = [];
   
   if (!applyBonuses) {
-    return { player, score, total: baseTotal, bonusDetails };
+    return { player, score: baseScore, total: baseTotal, bonusDetails };
   }
 
   // --- Apply Bonuses ---
+  let tasteBonus = 0;
+  let convenienceBonus = 0;
   let ecoBonus = 0;
   let totalBonus = 0;
 
   player.bonusCards.forEach(card => {
-    let metric: BonusDetail['metric'] = 'total';
+    let metric: BonusDetail['metric'] | null = null;
     let value = 0;
     let applied = false;
 
@@ -53,7 +54,7 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
         ecoBonus += value; applied = true;
       }
     } else if (card.id === 'campaign3') { // 지구지킴이 인증
-      const preCheckEco = player.bento.reduce((acc, item) => acc + item.eco, 0) + ecoBonus;
+      const preCheckEco = player.bento.reduce((acc, item) => acc + item.eco, 0);
       if (preCheckEco >= 10) {
         metric = 'total'; value = 2;
         totalBonus += value; applied = true;
@@ -64,7 +65,7 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
         ecoBonus += value; applied = true;
       }
     } else if (card.id === 'campaign5') { // 비닐 제로 선언
-      if (!hasItem(player.bento, '과대포장 젤리') && !hasItem(player.bento, '포장 핫도그')) { 
+      if (!hasItem(player.bento, '과대포장 젤리', '포장 핫도그')) { 
         metric = 'eco'; value = 3;
         ecoBonus += value; applied = true;
       }
@@ -93,15 +94,15 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
       }
     }
 
-    if(applied) {
+    if(applied && metric) {
       bonusDetails.push({ cardName: card.name, metric, value });
     }
   });
 
   const finalScore: Score = {
-    taste: score.taste,
-    convenience: score.convenience,
-    eco: score.eco + ecoBonus,
+    taste: baseScore.taste + tasteBonus,
+    convenience: baseScore.convenience + convenienceBonus,
+    eco: baseScore.eco + ecoBonus,
   };
   
   const finalTotal = finalScore.taste + finalScore.convenience + finalScore.eco + totalBonus;
