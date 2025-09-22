@@ -60,6 +60,7 @@ export type GamePhase =
   | 'player_turn'
   | 'ai_turn'
   | 'buying'
+  | 'round_summary'
   | 'game_over';
 
 export interface Score {

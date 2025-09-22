@@ -44,10 +44,12 @@ const BentoSlot = ({ item }: { item?: MenuItem }) => {
 
 const PlayerStatus = ({ player, score, isCurrent }: PlayerStatusProps) => {
     const container = player.bento.find(item => item.category === 'Container');
-    const foodItems = player.bento.filter(item => item.category !== 'Container');
+    const foodItems = player.bento.filter(item => item.category !== 'Container' && item.category !== 'Drink');
+    const drinkItem = player.bento.find(item => item.category === 'Drink');
+
 
   return (
-    <Card className={cn("transition-all", isCurrent ? 'ring-2 ring-primary shadow-lg' : 'opacity-80', player.eliminated && 'opacity-40 bg-destructive/10')}>
+    <Card className={cn("transition-all", isCurrent ? 'ring-2 ring-primary shadow-lg' : '', player.eliminated && 'opacity-40 bg-destructive/10')}>
       <CardHeader className="p-4">
         <div className="flex justify-between items-center">
             <CardTitle className="text-xl font-headline">{player.name} {player.isHuman && '(나)'}</CardTitle>
