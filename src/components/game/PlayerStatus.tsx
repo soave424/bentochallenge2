@@ -6,14 +6,50 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Leaf, Smile, Utensils, Award } from 'lucide-react';
+import { Leaf, Smile, Utensils, Award, Coins } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { INITIAL_SEEDS } from '@/lib/constants';
 
-interface PlayerStatusProps {
-  player: Player;
-  score: Score;
-  isCurrent: boolean;
+interface ScoreSliderProps {
+  value: number;
+  label: string;
+  Icon: React.ElementType;
+  iconColor: string;
 }
+
+const ScoreSlider = ({ value, label, Icon, iconColor }: ScoreSliderProps) => {
+  const min = -20;
+  const max = 20;
+  const percentage = ((Math.max(min, Math.min(value, max)) - min) / (max - min)) * 100;
+  const isNegative = value < 0;
+
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between items-center text-xs">
+        <div className="flex items-center gap-1">
+          <Icon className={cn('w-3.5 h-3.5', iconColor)} />
+          <span>{label}</span>
+        </div>
+        <span className="font-bold">{value}</span>
+      </div>
+      <div className="w-full bg-muted rounded-full h-2.5 relative overflow-hidden">
+        <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-background z-10"></div>
+        <div
+          className={cn(
+            'h-full rounded-full absolute',
+            isNegative ? 'bg-red-500' : 'bg-blue-500'
+          )}
+          style={{
+            left: isNegative ? `${percentage}%` : '50%',
+            right: isNegative ? '50%' : `${100 - percentage}%`,
+            transition: 'all 0.5s ease-in-out',
+          }}
+        ></div>
+      </div>
+    </div>
+  );
+};
+
 
 const BentoSlot = ({ item }: { item?: MenuItem }) => {
     if (!item) {
@@ -45,8 +81,6 @@ const BentoSlot = ({ item }: { item?: MenuItem }) => {
 const PlayerStatus = ({ player, score, isCurrent }: PlayerStatusProps) => {
     const container = player.bento.find(item => item.category === 'Container');
     const foodItems = player.bento.filter(item => item.category !== 'Container' && item.category !== 'Drink');
-    const drinkItem = player.bento.find(item => item.category === 'Drink');
-
 
   return (
     <Card className={cn("transition-all", isCurrent ? 'ring-2 ring-primary shadow-lg' : '', player.eliminated && 'opacity-40 bg-destructive/10')}>
@@ -56,13 +90,20 @@ const PlayerStatus = ({ player, score, isCurrent }: PlayerStatusProps) => {
             {player.eliminated ? (
                 <Badge variant="destructive">탈락</Badge>
             ) : (
-                <Badge variant="secondary">{player.seeds} 씨앗</Badge>
+              <div className="flex items-center gap-2">
+                <Coins className="w-5 h-5 text-amber-500"/>
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: INITIAL_SEEDS }).map((_, i) => (
+                      <div key={i} className={cn("w-2 h-4 rounded-sm", i < player.seeds ? 'bg-amber-400' : 'bg-muted')}/>
+                  ))}
+                </div>
+              </div>
             )}
         </div>
-        <div className="flex gap-4 text-sm pt-1">
-            <div className="flex items-center gap-1" title="맛"><Utensils className="w-4 h-4 text-orange-500" /> <span className="font-bold">{score.taste}</span></div>
-            <div className="flex items-center gap-1" title="편리함"><Smile className="w-4 h-4 text-blue-500" /> <span className="font-bold">{score.convenience}</span></div>
-            <div className="flex items-center gap-1" title="친환경"><Leaf className="w-4 h-4 text-green-500" /> <span className="font-bold">{score.eco}</span></div>
+        <div className="flex flex-col gap-3 text-sm pt-4">
+            <ScoreSlider value={score.taste} label="맛" Icon={Utensils} iconColor="text-orange-500" />
+            <ScoreSlider value={score.convenience} label="편리함" Icon={Smile} iconColor="text-blue-500" />
+            <ScoreSlider value={score.eco} label="친환경" Icon={Leaf} iconColor="text-green-500" />
         </div>
       </CardHeader>
       <Separator />
