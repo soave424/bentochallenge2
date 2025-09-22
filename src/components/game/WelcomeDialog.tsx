@@ -22,7 +22,7 @@ const WelcomeDialog = ({ onStart }: WelcomeDialogProps) => {
         <DialogHeader>
           <DialogTitle className="text-3xl font-headline text-primary flex items-center gap-2">
             <Rocket className="w-8 h-8" />
-            에코 도시락 챌린지!
+            친환경 소비를 고려하는 똑똑한 소비자
           </DialogTitle>
           <DialogDescription className="text-base text-muted-foreground pt-2 text-left">
             최고의 도시락을 만들면서 지속 가능한 선택을 해보세요. 게임 방법은 다음과 같습니다:
