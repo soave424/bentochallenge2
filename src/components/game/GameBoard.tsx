@@ -88,21 +88,23 @@ const GameBoard = () => {
       
     const nextRound = round + 1;
     setPurchasedItemIds([]);
-
     setRound(nextRound);
     
     const newPlayerOrder = shuffle([...players]);
     setPlayers(newPlayerOrder);
     
     const firstPlayerIndex = 0;
-    setCurrentPlayerIndex(firstPlayerIndex);
-
-    const firstPlayer = newPlayerOrder[firstPlayerIndex];
-    if (firstPlayer.isHuman) {
-      setGamePhase('rolling');
-    } else {
-      setGamePhase('ai_turn');
-    }
+    
+    // 상태 업데이트가 반영될 시간을 주기 위해 timeout 사용
+    setTimeout(() => {
+      setCurrentPlayerIndex(firstPlayerIndex);
+      const firstPlayer = newPlayerOrder[firstPlayerIndex];
+      if (firstPlayer.isHuman) {
+        setGamePhase('rolling');
+      } else {
+        setGamePhase('ai_turn');
+      }
+    }, 100);
   }
 
   const initializeGame = useCallback(async () => {
@@ -187,10 +189,6 @@ const GameBoard = () => {
     const d1 = Math.floor(Math.random() * 6) + 1;
     const d2 = Math.floor(Math.random() * 6) + 1;
     setDice([d1 as 1 | 2 | 3 | 4 | 5 | 6, d2 as 1 | 2 | 3 | 4 | 5 | 6]);
-    
-    toast({
-      description: `${currentPlayer.name}님이 주사위를 굴려 ${d1}과(와) ${d2}이(가) 나왔습니다.`,
-    });
 
     if (d1 === d2) {
       const randomCard = bonusCards[Math.floor(Math.random() * bonusCards.length)];
@@ -282,7 +280,6 @@ const GameBoard = () => {
           const d1 = Math.floor(Math.random() * 6) + 1;
           const d2 = Math.floor(Math.random() * 6) + 1;
           setDice([d1 as 1 | 2 | 3 | 4 | 5 | 6,d2 as 1 | 2 | 3 | 4 | 5 | 6]);
-          toast({ description: `${ai.name}이(가) 주사위를 굴려 ${d1}과(와) ${d2}이(가) 나왔습니다.`});
 
           if (d1 === d2) {
             const randomCard = bonusCards[Math.floor(Math.random() * bonusCards.length)];
@@ -336,11 +333,6 @@ const GameBoard = () => {
             }
         }
 
-        if (!boughtAnItem) {
-            const reason = ai.bento.some(i => i.category === currentCategory) ? '이미 구매를 마쳤습니다' : '살 수 있는 아이템이 없습니다';
-            toast({ description: `${ai.name}은(는) ${reason}. 턴을 마칩니다.` });
-        }
-        
         setTimeout(() => {
           advanceToNextPlayer();
         }, 1500);
@@ -444,3 +436,5 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
+
+    
