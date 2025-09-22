@@ -81,12 +81,12 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
                             <div className="mt-2 pt-2 border-t border-background space-y-1">
                                 {bonusDetails.map((detail, i) => (
                                     <div key={i} className="flex justify-between items-center text-xs">
-                                        <p className="text-muted-foreground flex items-center">
+                                        <div className="text-muted-foreground flex items-center">
                                             <Badge variant={detail.value > 0 ? "default" : "destructive"} className="mr-2 text-xs w-16 justify-center">
                                                 {detail.value > 0 ? `+${detail.value}` : detail.value} {detail.metric === 'total' ? '만족도' : detail.metric}
                                             </Badge>
                                             {detail.cardName}
-                                        </p>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
