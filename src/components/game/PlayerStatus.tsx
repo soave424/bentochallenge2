@@ -119,7 +119,7 @@ const PlayerStatus = ({ player, isCurrent, isCompact = false }: PlayerStatusProp
     <Card className={cn("transition-all", isCurrent ? 'ring-2 ring-primary shadow-lg' : '')}>
       <CardHeader className="p-4">
         <div className="flex justify-between items-center">
-            <CardTitle className="text-xl font-headline">{player.name} {player.isHuman && '(나)'}</CardTitle>
+            <CardTitle className="text-xl font-headline">{player.name}</CardTitle>
               <div className="flex items-center gap-2">
                 <Coins className="w-5 h-5 text-amber-500"/>
                  <span className="font-semibold text-sm">({player.seeds}/{INITIAL_SEEDS})</span>
