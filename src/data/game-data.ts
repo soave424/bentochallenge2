@@ -10,8 +10,6 @@ export const menuItems: MenuItem[] = [
   { id: 6, name: '에그 샌드위치', category: 'Side Dish', price: 4, taste: 2, convenience: 1, eco: -1, image: '6', imageHint: 'egg sandwich' },
   { id: 7, name: '채소말이', category: 'Side Dish', price: 4, taste: 1, convenience: 0, eco: 3, image: '7', imageHint: 'vegetable roll' },
   { id: 8, name: '전자레인지 돈가스', category: 'Side Dish', price: 4, taste: 2, convenience: 2, eco: -2, image: '8', imageHint: 'microwave pork' },
-  { id: 9, name: '도시락 반찬세트 (냉동)', category: 'Side Dish', price: 3, taste: 1, convenience: 2, eco: -1, image: '9', imageHint: 'frozen side-dishes' },
-  { id: 10, name: '두부조림', category: 'Side Dish', price: 2, taste: 1, convenience: 0, eco: 2, image: '10', imageHint: 'braised tofu' },
 
   // Fruits
   { id: 11, name: '수입 체리', category: 'Fruit', price: 4, taste: 2, convenience: 1, eco: -2, image: '11', imageHint: 'imported cherries' },
@@ -22,8 +20,6 @@ export const menuItems: MenuItem[] = [
   { id: 16, name: '파인애플 컵과일', category: 'Fruit', price: 3, taste: 2, convenience: 2, eco: -2, image: '16', imageHint: 'pineapple cup' },
   { id: 17, name: '수입 포도', category: 'Fruit', price: 3, taste: 2, convenience: 1, eco: -1, image: '17', imageHint: 'imported grapes' },
   { id: 18, name: '로컬 감', category: 'Fruit', price: 2, taste: 1, convenience: 0, eco: 3, image: '18', imageHint: 'local persimmon' },
-  { id: 19, name: '도시락용 과일 젤리', category: 'Fruit', price: 2, taste: 2, convenience: 2, eco: -2, image: '19', imageHint: 'fruit jelly' },
-  { id: 20, name: '제철 딸기', category: 'Fruit', price: 3, taste: 2, convenience: 1, eco: 2, image: '20', imageHint: 'seasonal strawberry' },
 
   // Drinks
   { id: 21, name: '플라스틱 생수', category: 'Drink', price: 2, taste: 0, convenience: 2, eco: -2, image: '21', imageHint: 'plastic water' },
@@ -34,8 +30,6 @@ export const menuItems: MenuItem[] = [
   { id: 26, name: '종이팩 음료', category: 'Drink', price: 3, taste: 1, convenience: 2, eco: 1, image: '26', imageHint: 'paper-pack drink' },
   { id: 27, name: '생수 리필', category: 'Drink', price: 2, taste: 0, convenience: 0, eco: 3, image: '27', imageHint: 'water refill' },
   { id: 28, name: '로컬 무첨가 주스', category: 'Drink', price: 4, taste: 2, convenience: 0, eco: 3, image: '28', imageHint: 'local juice' },
-  { id: 29, name: '보리차', category: 'Drink', price: 3, taste: 1, convenience: 1, eco: 2, image: '29', imageHint: 'barley tea' },
-  { id: 30, name: '카페 아이스커피', category: 'Drink', price: 4, taste: 2, convenience: 2, eco: -2, image: '30', imageHint: 'iced coffee' },
 
   // Containers
   { id: 31, name: '일회용 플라스틱 도시락', category: 'Container', price: 2, taste: 0, convenience: 2, eco: -2, image: '31', imageHint: 'plastic container' },
@@ -46,8 +40,6 @@ export const menuItems: MenuItem[] = [
   { id: 36, name: '옥수수 전분 도시락', category: 'Container', price: 3, taste: 0, convenience: 1, eco: 3, image: '36', imageHint: 'cornstarch container' },
   { id: 37, name: '대나무 용기', category: 'Container', price: 4, taste: 0, convenience: 0, eco: 3, image: '37', imageHint: 'bamboo container' },
   { id: 38, name: '도시락 보냉백', category: 'Container', price: 3, taste: 0, convenience: 1, eco: 2, image: '38', imageHint: 'cooler bag' },
-  { id: 39, name: '투명 도시락 케이스', category: 'Container', price: 3, taste: 0, convenience: 2, eco: -1, image: '39', imageHint: 'clear case' },
-  { id: 40, name: '소형 다회용 샐러드볼', category: 'Container', price: 2, taste: 0, convenience: 0, eco: 2, image: '40', imageHint: 'salad bowl' },
 
   // Snacks
   { id: 41, name: '과대포장 젤리', category: 'Snack', price: 2, taste: 2, convenience: 2, eco: -2, image: '41', imageHint: 'packaged jelly' },
@@ -58,8 +50,6 @@ export const menuItems: MenuItem[] = [
   { id: 46, name: '비건 에너지바', category: 'Snack', price: 3, taste: 1, convenience: 0, eco: 2, image: '46', imageHint: 'vegan bar' },
   { id: 47, name: '지역 빵집 크로와상', category: 'Snack', price: 3, taste: 2, convenience: 0, eco: 2, image: '47', imageHint: 'local croissant' },
   { id: 48, name: '냉동 찐빵', category: 'Snack', price: 2, taste: 1, convenience: 1, eco: 0, image: '48', imageHint: 'frozen bun' },
-  { id: 49, name: '로컬 꿀약과', category: 'Snack', price: 3, taste: 1, convenience: 0, eco: 3, image: '49', imageHint: 'local honey-cookie' },
-  { id: 50, name: '컵떡볶이', category: 'Snack', price: 3, taste: 2, convenience: 2, eco: -2, image: '50', imageHint: 'cup tteokbokki' },
 ];
 
 export const bonusCards: BonusCard[] = [

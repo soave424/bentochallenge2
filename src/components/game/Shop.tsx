@@ -38,7 +38,7 @@ const Shop = ({ items, onBuy, disabled, category, round }: ShopProps) => {
       <CardContent>
         <ScrollArea className="h-[75vh] pr-4">
           <div className="space-y-6">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-4 gap-4">
                 {items.length > 0 ? items.map(item => (
                 <Card
                     key={item.id}
