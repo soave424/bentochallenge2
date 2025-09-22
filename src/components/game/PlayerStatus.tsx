@@ -98,22 +98,24 @@ const PlayerStatus = ({ player, isCurrent, isCompact = false }: PlayerStatusProp
     return (
         <Card className={cn("transition-all", isCurrent ? 'ring-2 ring-primary shadow-lg' : '', player.eliminated && 'opacity-40 bg-destructive/10')}>
              <div className="p-3">
-                 <div className="flex justify-between items-center mb-2">
-                    <p className="font-bold text-sm">{player.name}</p>
-                     {player.eliminated ? (
+                 {player.eliminated ? (
+                     <div className="flex justify-between items-center">
+                        <p className="font-bold text-sm text-muted-foreground">{player.name}</p>
                         <Badge variant="destructive" className="text-xs">탈락</Badge>
-                    ) : (
-                        <div className="flex items-center gap-1.5 text-xs">
-                            <Coins className="w-4 h-4 text-amber-500"/>
-                            <span className="font-semibold">{player.seeds}</span>
+                     </div>
+                 ) : (
+                    <div className="flex justify-between items-center text-sm">
+                        <p className="font-bold truncate">{player.name}</p>
+                        <div className="flex items-center gap-2 text-xs shrink-0">
+                            <Separator orientation="vertical" className="h-4 mx-1"/>
+                            <div className="flex items-center gap-1" title="맛"><Utensils className="w-4 h-4 text-orange-500" /><span>{score.taste}</span></div>
+                            <div className="flex items-center gap-1" title="편리함"><Smile className="w-4 h-4 text-blue-500" /><span>{score.convenience}</span></div>
+                            <div className="flex items-center gap-1" title="친환경"><Leaf className="w-4 h-4 text-green-500" /><span>{score.eco}</span></div>
+                             <Separator orientation="vertical" className="h-4 mx-1"/>
+                            <div className="flex items-center gap-1 font-semibold" title="씨앗"><Coins className="w-4 h-4 text-amber-500"/><span>{player.seeds}</span></div>
                         </div>
-                    )}
-                 </div>
-                 <div className="grid grid-cols-3 gap-x-2">
-                    <ScoreSlider value={score.taste} label="맛" Icon={Utensils} iconColor="text-orange-500" isCompact />
-                    <ScoreSlider value={score.convenience} label="편리함" Icon={Smile} iconColor="text-blue-500" isCompact />
-                    <ScoreSlider value={score.eco} label="친환경" Icon={Leaf} iconColor="text-green-500" isCompact />
-                 </div>
+                    </div>
+                 )}
              </div>
         </Card>
     )
