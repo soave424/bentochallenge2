@@ -53,7 +53,7 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
         ecoBonus += value; applied = true;
       }
     } else if (card.id === 'campaign3') { // 지구지킴이 인증
-      const preCheckEco = player.bento.reduce((acc, item) => acc + item.eco, 0);
+      const preCheckEco = player.bento.reduce((acc, item) => acc + item.eco, 0) + ecoBonus;
       if (preCheckEco >= 10) {
         metric = 'total'; value = 2;
         totalBonus += value; applied = true;
@@ -64,7 +64,7 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
         ecoBonus += value; applied = true;
       }
     } else if (card.id === 'campaign5') { // 비닐 제로 선언
-      if (!hasItem(player.bento, '과대포장 젤리', '포장 핫도그')) { 
+      if (!hasItem(player.bento, '과대포장 젤리') && !hasItem(player.bento, '포장 핫도그')) { 
         metric = 'eco'; value = 3;
         ecoBonus += value; applied = true;
       }
