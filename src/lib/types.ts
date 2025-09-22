@@ -79,7 +79,7 @@ export interface BonusDetail {
 
 export interface ScoreWithBonuses {
     player: Player;
-    score: Omit<Score, 'total'>;
+    score: Score;
     total: number;
     bonusDetails: BonusDetail[];
 }

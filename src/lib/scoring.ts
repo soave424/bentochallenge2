@@ -23,9 +23,11 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
     score.convenience += item.convenience;
     score.eco += item.eco;
   }
+  
+  score.total = score.taste + score.convenience + score.eco;
 
   const bonusDetails: BonusDetail[] = [];
-  let total = score.taste + score.convenience + score.eco;
+  let totalWithBonuses = score.total;
 
   if (applyBonuses) {
     // 2. Apply bonus card effects
@@ -52,7 +54,7 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
             const preCheckEco = player.bento.reduce((acc, item) => acc + item.eco, 0);
             if (preCheckEco >= 10) {
                 metric = 'total'; value = 2;
-                total += value; applied = true;
+                totalWithBonuses += value; applied = true;
             }
             break;
         case 'campaign4': // 물 절약 캠페인
@@ -72,7 +74,7 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
         case 'tax1': // 플라스틱세 부과
           if (hasItem(player.bento, '일회용 플라스틱 도시락')) {
             metric = 'total'; value = -2;
-            total += value; applied = true;
+            totalWithBonuses += value; applied = true;
           }
           break;
         case 'tax2': // 페트병 규제 - This is applied directly to seeds in GameBoard, not here.
@@ -86,14 +88,14 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
         case 'tax4': // 탄소발자국 경고
             if (countItems(player.bento, item => item.name.includes('수입')) >= 2) {
               metric = 'total'; value = -2;
-              total += value; applied = true;
+              totalWithBonuses += value; applied = true;
             }
             break;
         case 'tax5': // 일회용 페널티
           const disposableCount = countItems(player.bento, item => item.name.startsWith('일회용') || item.name.startsWith('플라스틱') || item.name.startsWith('페트병') || item.name.startsWith('캔'));
           if (disposableCount >= 2) {
               metric = 'total'; value = -3;
-              total += value; applied = true;
+              totalWithBonuses += value; applied = true;
           }
           break;
       }
@@ -102,10 +104,10 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
         bonusDetails.push({ cardName: card.name, metric, value });
       }
     }
+     // Recalculate final total with eco bonuses
+    totalWithBonuses = score.taste + score.convenience + score.eco + (totalWithBonuses - score.total);
   }
 
-  // Final total calculation
-  total = score.taste + score.convenience + score.eco + (total - (score.taste + score.convenience + score.eco));
 
-  return { player, score, total, bonusDetails };
+  return { player, score, total: applyBonuses ? totalWithBonuses : score.total, bonusDetails };
 }

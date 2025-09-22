@@ -28,16 +28,21 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
     const scores = useMemo(() => players.map(p => calculatePlayerScore(p, showBonuses)), [players, showBonuses]);
 
     const sortedScores = useMemo(() => [...scores].sort((a, b) => {
+        if (a.player.eliminated && !b.player.eliminated) return 1;
+        if (!a.player.eliminated && b.player.eliminated) return -1;
         if (b.total === a.total) {
-            return b.eco - a.eco;
+            return b.score.eco - a.score.eco;
         }
-        return b.total - a.score.total;
+        return b.total - a.total;
     }), [scores]);
 
+    const activePlayersScores = useMemo(() => scores.filter(s => !s.player.eliminated), [scores]);
+
     const winner = sortedScores[0];
-    const ecoChamp = [...scores].sort((a, b) => b.eco - a.eco)[0];
-    const tasteChamp = [...scores].sort((a, b) => b.taste - a.taste)[0];
-    const convenienceChamp = [...scores].sort((a, b) => b.convenience - a.convenience)[0];
+    const ecoChamp = activePlayersScores.length > 0 ? [...activePlayersScores].sort((a, b) => b.score.eco - a.score.eco)[0] : null;
+    const tasteChamp = activePlayersScores.length > 0 ? [...activePlayersScores].sort((a, b) => b.score.taste - a.score.taste)[0] : null;
+    const convenienceChamp = activePlayersScores.length > 0 ? [...activePlayersScores].sort((a, b) => b.score.convenience - a.score.convenience)[0] : null;
+
 
     return (
     <Dialog open={true}>
@@ -61,11 +66,11 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
 
             <div className="space-y-2">
                 {sortedScores.map(({ player, score, total, bonusDetails }, index) => (
-                    <div key={player.id} className="flex flex-col p-3 bg-secondary rounded-md">
+                    <div key={player.id} className={cn("flex flex-col p-3 bg-secondary rounded-md", player.eliminated && "opacity-50")}>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <span className="text-xl font-bold">{index + 1}.</span>
-                                <p className="font-semibold">{player.name}</p>
+                                <p className="font-semibold">{player.name} {player.eliminated ? '(탈락)' : ''}</p>
                             </div>
                             <div className="text-right">
                                 <p className="font-bold">소비자 만족도: {total}</p>
@@ -76,8 +81,10 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
                             <div className="mt-2 pt-2 border-t border-background space-y-1">
                                 {bonusDetails.map((detail, i) => (
                                     <div key={i} className="flex justify-between items-center text-xs">
-                                        <p className="text-muted-foreground">
-                                            <Badge variant={detail.value > 0 ? "default" : "destructive"} className="mr-2 text-xs w-12 justify-center">{detail.value > 0 ? `+${detail.value}` : detail.value} {detail.metric}</Badge>
+                                        <p className="text-muted-foreground flex items-center">
+                                            <Badge variant={detail.value > 0 ? "default" : "destructive"} className="mr-2 text-xs w-16 justify-center">
+                                                {detail.value > 0 ? `+${detail.value}` : detail.value} {detail.metric === 'total' ? '만족도' : detail.metric}
+                                            </Badge>
                                             {detail.cardName}
                                         </p>
                                     </div>
@@ -92,17 +99,17 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
                 <div className="p-2 bg-green-500/20 rounded">
                     <Leaf className="mx-auto w-5 h-5 text-green-600 dark:text-green-400 mb-1"/>
                     <p className="font-bold">친환경 챔피언</p>
-                    <p>{ecoChamp.player.name} ({ecoChamp.eco}점)</p>
+                    {ecoChamp && <p>{ecoChamp.player.name} ({ecoChamp.score.eco}점)</p>}
                 </div>
                 <div className="p-2 bg-orange-500/20 rounded">
                     <Utensils className="mx-auto w-5 h-5 text-orange-600 dark:text-orange-400 mb-1"/>
                     <p className="font-bold">미식가</p>
-                    <p>{tasteChamp.player.name} ({tasteChamp.taste}점)</p>
+                    {tasteChamp && <p>{tasteChamp.player.name} ({tasteChamp.score.taste}점)</p>}
                 </div>
                 <div className="p-2 bg-blue-500/20 rounded">
                     <Smile className="mx-auto w-5 h-5 text-blue-600 dark:text-blue-400 mb-1"/>
                     <p className="font-bold">편리함의 왕</p>
-                    <p>{convenienceChamp.player.name} ({convenienceChamp.convenience}점)</p>
+                    {convenienceChamp && <p>{convenienceChamp.player.name} ({convenienceChamp.score.convenience}점)</p>}
                 </div>
             </div>
         </ScrollArea>
