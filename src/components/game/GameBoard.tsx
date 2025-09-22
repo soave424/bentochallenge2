@@ -85,23 +85,26 @@ const GameBoard = () => {
       setGamePhase('game_over');
       return;
     }
-      
-    const nextRound = round + 1;
-    setPurchasedItemIds([]);
-    setRound(nextRound);
-    
-    const newPlayerOrder = shuffle([...players]);
-    setPlayers(newPlayerOrder);
-    
-    const firstPlayerIndex = 0;
-    setCurrentPlayerIndex(firstPlayerIndex);
-    const firstPlayer = newPlayerOrder[firstPlayerIndex];
-    
+
+    const firstPlayer = shuffle([...players])[0];
     if (firstPlayer.isHuman) {
       setGamePhase('rolling');
     } else {
       setGamePhase('ai_turn');
     }
+    
+    // Use a timeout to ensure the RoundSummary dialog has time to close before the state for the next round is set.
+    setTimeout(() => {
+        const nextRound = round + 1;
+        setPurchasedItemIds([]);
+        setRound(nextRound);
+        
+        const newPlayerOrder = shuffle([...players]);
+        setPlayers(newPlayerOrder);
+        
+        const firstPlayerIndex = 0;
+        setCurrentPlayerIndex(firstPlayerIndex);
+    }, 50);
   }
 
   const initializeGame = useCallback(async () => {
@@ -431,5 +434,3 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
-
-    
