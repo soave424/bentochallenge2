@@ -12,7 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const MenuItemSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   name: z.string(),
   price: z.number(),
   taste: z.number(),
@@ -29,7 +29,7 @@ export type SimulateVirtualPlayersInput = z.infer<typeof SimulateVirtualPlayersI
 
 const VirtualPlayerChoicesSchema = z.object({
   playerChoices: z.array(z.object({
-    itemIds: z.array(z.number()).describe('The item ids chosen by the virtual player.'),
+    itemIds: z.array(z.string()).describe('The item ids chosen by the virtual player.'),
   })).describe('An array of virtual player choices, with each choice indicating the item ids selected.'),
 });
 

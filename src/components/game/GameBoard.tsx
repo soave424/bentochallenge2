@@ -31,7 +31,7 @@ const GameBoard = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [lastBonusCard, setLastBonusCard] = useState<BonusCard | null>(null);
   const [round, setRound] = useState(0); // 0-indexed, so 0 is round 1
-  const [purchasedItemIds, setPurchasedItemIds] = useState<number[]>([]);
+  const [purchasedItemIds, setPurchasedItemIds] = useState<string[]>([]);
   const { toast } = useToast();
 
   const currentCategory = useMemo(() => CATEGORIES[round], [round]);
@@ -138,7 +138,7 @@ const GameBoard = () => {
       });
       
       const virtualPlayers: Player[] = Array.from({ length: NUM_VIRTUAL_PLAYERS }).map((_, i) => ({
-        id: `player-ai-${i}`, name: virtualPlayerNames[i], isHuman: false, seeds: INITIAL_SEEDS, bento: [], bonusCards: [], aiShoppingList: aiChoices.playerChoices[i]?.itemIds || [], eliminated: false,
+        id: `player-ai-${i}`, name: virtualPlayerNames[i % virtualPlayerNames.length], isHuman: false, seeds: INITIAL_SEEDS, bento: [], bonusCards: [], aiShoppingList: aiChoices.playerChoices[i]?.itemIds || [], eliminated: false,
       }));
       initialPlayers.push(...virtualPlayers);
     }
@@ -397,7 +397,6 @@ const GameBoard = () => {
             <PlayerStatus 
                 key={humanPlayer.id} 
                 player={humanPlayer} 
-                score={calculatePlayerScore(humanPlayer, false).score} 
                 isCurrent={true} 
             />
           )}
@@ -409,7 +408,6 @@ const GameBoard = () => {
                         <PlayerStatus 
                             key={player.id} 
                             player={player} 
-                            score={calculatePlayerScore(player, false).score} 
                             isCurrent={currentPlayer?.id === player.id}
                             isCompact={true}
                         />
@@ -436,5 +434,3 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
-
-    

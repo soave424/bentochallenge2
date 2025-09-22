@@ -22,7 +22,7 @@ export const CATEGORY_NAMES: Record<Category, string> = {
 };
 
 export interface MenuItem {
-  id: number;
+  id: string;
   name: string;
   category: Category;
   price: number;
@@ -50,7 +50,7 @@ export interface Player {
   seeds: number;
   bento: MenuItem[];
   bonusCards: BonusCard[];
-  aiShoppingList?: number[];
+  aiShoppingList?: string[];
   eliminated: boolean;
 }
 

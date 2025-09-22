@@ -15,7 +15,7 @@ interface ShopProps {
   disabled: boolean;
   round: number;
   category: Category;
-  purchasedItemIds: number[];
+  purchasedItemIds: string[];
 }
 
 const categoryIcons: Record<Category, string> = {

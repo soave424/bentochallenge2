@@ -65,7 +65,7 @@ export default function AdminPage() {
   };
 
   const handleInputChange = (
-    id: number,
+    id: string,
     field: keyof MenuItem,
     value: string | number
   ) => {
@@ -217,5 +217,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    

@@ -9,6 +9,8 @@ import { cn } from '@/lib/utils';
 import { Leaf, Smile, Utensils, Award, Coins } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { INITIAL_SEEDS } from '@/lib/constants';
+import { calculatePlayerScore } from '@/lib/scoring';
+
 
 interface ScoreSliderProps {
   value: number;
@@ -83,12 +85,12 @@ const BentoSlot = ({ item }: { item?: MenuItem }) => {
 
 interface PlayerStatusProps {
     player: Player;
-    score: Omit<Score, 'total'>;
     isCurrent: boolean;
     isCompact?: boolean;
 }
 
-const PlayerStatus = ({ player, score, isCurrent, isCompact = false }: PlayerStatusProps) => {
+const PlayerStatus = ({ player, isCurrent, isCompact = false }: PlayerStatusProps) => {
+    const { score } = calculatePlayerScore(player, false);
     const container = player.bento.find(item => item.category === 'Container');
     const foodItems = player.bento.filter(item => item.category !== 'Container' && item.category !== 'Drink');
 
