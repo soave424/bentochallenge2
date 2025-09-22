@@ -116,7 +116,7 @@ const GameBoard = () => {
     };
     
     const virtualPlayerNames = ['가상 플레이어 1', '가상 플레이어 2', '가상 플레이어 3'];
-    let initialPlayers: Player[] = [human];
+    let initialPlayers: Player[] = [];
 
     if (NUM_VIRTUAL_PLAYERS > 0) {
        const aiChoices = await getVirtualPlayerChoices({
@@ -133,6 +133,7 @@ const GameBoard = () => {
       initialPlayers.push(...virtualPlayers);
     }
     
+    initialPlayers.push(human);
     const shuffledPlayers = shuffle(initialPlayers);
     setPlayers(shuffledPlayers);
     
@@ -157,16 +158,27 @@ const GameBoard = () => {
     const updatedPlayers = players.map(p => {
         if (p.eliminated) return p;
         
-        if (p.seeds < minPriceInGame) {
-             const canEverAffordAnything = menuItems.some(item => p.seeds >= item.price && !p.bento.some(b => b.category === item.category));
-             if (!canEverAffordAnything && p.bento.length < CATEGORIES.length) {
-               if(p.isHuman) {
-                   toast({ title: "탈락", description: `씨앗이 부족하여 더 이상 아이템을 구매할 수 없습니다.`, variant: 'destructive'});
-               } else {
-                   toast({ title: "플레이어 탈락", description: `${p.name}님은 씨앗이 부족하여 더 이상 아이템을 구매할 수 없습니다.`, variant: 'destructive'});
-               }
-               return { ...p, eliminated: true };
+        const mustBuyFromCategories = CATEGORIES.slice(0, round + 1);
+        const boughtCategories = new Set(p.bento.map(i => i.category));
+        
+        let canEverAffordAnything = false;
+        for (const category of CATEGORIES) {
+            if (!boughtCategories.has(category)) {
+                const affordableItemsInCategory = menuItems.filter(item => item.category === category && p.seeds >= item.price);
+                if (affordableItemsInCategory.length > 0) {
+                    canEverAffordAnything = true;
+                    break;
+                }
+            }
+        }
+
+        if (p.seeds < minPriceInGame && !canEverAffordAnything) {
+             if(p.isHuman) {
+                 toast({ title: "탈락", description: `씨앗이 부족하여 더 이상 아이템을 구매할 수 없습니다.`, variant: 'destructive'});
+             } else {
+                 toast({ title: "플레이어 탈락", description: `${p.name}님은 씨앗이 부족하여 더 이상 아이템을 구매할 수 없습니다.`, variant: 'destructive'});
              }
+             return { ...p, eliminated: true };
         }
         return p;
     });
@@ -175,7 +187,7 @@ const GameBoard = () => {
     if (wasUpdated) {
         setPlayers(updatedPlayers);
     }
-  }, [players, gamePhase, menuItems, toast]);
+  }, [players, gamePhase, menuItems, toast, round]);
 
   // Main Game Loop Controller
   useEffect(() => {
@@ -471,3 +483,5 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
+
+    
