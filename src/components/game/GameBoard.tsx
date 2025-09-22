@@ -5,7 +5,7 @@ import type { Player, GamePhase, MenuItem, BonusCard, Category } from '@/lib/typ
 import { INITIAL_SEEDS, NUM_VIRTUAL_PLAYERS } from '@/lib/constants';
 import { menuItems, bonusCards } from '@/data/game-data';
 import { getVirtualPlayerChoices } from '@/app/actions';
-import { CATEGORIES } from '@/lib/types';
+import { CATEGORIES, CATEGORY_NAMES } from '@/lib/types';
 import { calculatePlayerScore } from '@/lib/scoring';
 import { shuffle } from '@/lib/utils';
 import { ChevronsRight } from 'lucide-react';
@@ -158,7 +158,7 @@ const GameBoard = () => {
   };
   
   useEffect(() => {
-    if (gamePhase === 'ai_turn' && !currentPlayer.isHuman && currentCategory) {
+    if (gamePhase === 'ai_turn' && currentPlayer && !currentPlayer.isHuman && currentCategory) {
       const ai = currentPlayer;
       setTimeout(() => {
         const d1 = Math.floor(Math.random() * 6) + 1;
