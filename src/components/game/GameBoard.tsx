@@ -71,13 +71,18 @@ const GameBoard = () => {
     if (nextIndex >= players.length) {
       // All players have taken their turn in the current round
       setGamePhase('round_end');
-      setIsRoundSummaryOpen(true);
     } else {
       setCurrentPlayerIndex(nextIndex);
       const nextPlayer = players[nextIndex];
       setGamePhase(nextPlayer.isHuman ? 'rolling' : 'ai_turn');
     }
   }, [currentPlayerIndex, players]);
+
+  useEffect(() => {
+    if(gamePhase === 'round_end') {
+      setIsRoundSummaryOpen(true);
+    }
+  }, [gamePhase]);
 
 
   const canHumanPlayerSkip = useMemo(() => {
@@ -141,7 +146,7 @@ const GameBoard = () => {
     if (gamePhase === 'advancing_round') {
         advanceRound();
     }
-  }, [gamePhase]);
+  }, [gamePhase, advanceRound]);
 
   const initializeGame = useCallback(async () => {
     setGamePhase('loading');
@@ -297,7 +302,9 @@ const GameBoard = () => {
                     if (availableCards.length > 0) {
                         const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
                         setLastBonusCard(randomCard);
-                        toast({ title: '보너스 카드 획득!', description: `${ai.name}님이 비밀 보너스 카드를 받았습니다!` });
+                        setTimeout(() => {
+                            toast({ title: '보너스 카드 획득!', description: `${ai.name}님이 비밀 보너스 카드를 받았습니다!` });
+                        }, 0);
                         return { ...p, bonusCards: [...p.bonusCards, randomCard] };
                     }
                 }
@@ -342,7 +349,7 @@ const GameBoard = () => {
     };
 
     startAiTurn();
-  }, [gamePhase, currentPlayer, advanceToNextPlayer, shopItems, toast, currentCategory, purchasedItemIds]);
+  }, [gamePhase, currentPlayer, advanceToNextPlayer, shopItems, toast, currentCategory, purchasedItemIds, players]);
 
   if (gamePhase === 'welcome') {
     return <WelcomeDialog onStart={initializeGame} />;
@@ -438,3 +445,5 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
+
+    
