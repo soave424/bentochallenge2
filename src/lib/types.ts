@@ -1,4 +1,5 @@
 
+
 export type Category =
   | 'Side Dish'
   | 'Fruit'
@@ -62,6 +63,7 @@ export type GamePhase =
   | 'ai_turn'
   | 'buying'
   | 'round_end'
+  | 'advancing_round'
   | 'game_over';
 
 export interface Score {

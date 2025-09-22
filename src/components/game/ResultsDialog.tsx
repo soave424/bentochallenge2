@@ -29,7 +29,6 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
     const [showDetailedResults, setShowDetailedResults] = useState(false);
     
     const humanPlayer = useMemo(() => players.find(p => p.isHuman), [players]);
-
     const scores = useMemo(() => players.map(p => calculatePlayerScore(p, showBonuses)), [players, showBonuses]);
 
     const sortedScores = useMemo(() => [...scores].sort((a, b) => {
@@ -39,12 +38,12 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
         return b.total - a.total;
     }), [scores]);
 
-
     const winner = sortedScores[0];
     const ecoChamp = [...scores].sort((a, b) => b.score.eco - a.score.eco)[0] ?? null;
     const tasteChamp = [...scores].sort((a, b) => b.score.taste - a.score.taste)[0] ?? null;
     const convenienceChamp = [...scores].sort((a, b) => b.score.convenience - a.score.convenience)[0] ?? null;
     const totalBonusCards = useMemo(() => players.reduce((acc, p) => acc + p.bonusCards.length, 0), [players]);
+    const humanPlayerWithScore = useMemo(() => scores.find(s => s.player.isHuman), [scores]);
 
     return (
     <>
@@ -118,27 +117,27 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
             </div>
         </ScrollArea>
         <DialogFooter className="mt-6 flex-col gap-2 sm:flex-col sm:space-x-0">
-            {!showBonuses && (
-                <Button onClick={() => setShowBonuses(true)} className="w-full" disabled={totalBonusCards === 0}>
+            {!showBonuses && totalBonusCards > 0 && (
+                <Button onClick={() => setShowBonuses(true)} className="w-full">
                     <Sparkles className="w-4 h-4 mr-2"/>
                     보너스 카드 적용하기
                     <ArrowRight className="w-4 h-4 ml-2"/>
                 </Button>
             )}
-             {showBonuses && humanPlayer && (
+             {showBonuses && humanPlayerWithScore && (
                  <Button onClick={() => setShowDetailedResults(true)} className="w-full" variant="secondary">
                     <FileText className="w-4 h-4 mr-2"/>
                     결과 상세보기
                 </Button>
              )}
-          <Button onClick={onRestart} className="w-full" variant={showBonuses ? "default" : "outline"}>다시 시작</Button>
+          <Button onClick={onRestart} className="w-full" variant={(showBonuses || totalBonusCards === 0) ? "default" : "outline"}>다시 시작</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-    {showDetailedResults && humanPlayer && (
+    {showDetailedResults && humanPlayerWithScore && (
         <DetailedResults
-            player={scores.find(s => s.player.id === humanPlayer.id)!}
-            finalScore={scores.find(s => s.player.id === humanPlayer.id)!}
+            player={humanPlayerWithScore.player}
+            finalScore={humanPlayerWithScore}
             onClose={() => setShowDetailedResults(false)}
         />
     )}

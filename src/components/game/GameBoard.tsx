@@ -58,6 +58,7 @@ const GameBoard = () => {
   const [lastBonusCard, setLastBonusCard] = useState<BonusCard | null>(null);
   const [round, setRound] = useState(0); // 0-indexed, so 0 is round 1
   const [purchasedItemIds, setPurchasedItemIds] = useState<string[]>([]);
+  const [isRoundSummaryOpen, setIsRoundSummaryOpen] = useState(false);
   const { toast } = useToast();
 
   const currentCategory = useMemo(() => CATEGORIES[round], [round]);
@@ -70,6 +71,7 @@ const GameBoard = () => {
     if (nextIndex >= players.length) {
       // All players have taken their turn in the current round
       setGamePhase('round_end');
+      setIsRoundSummaryOpen(true);
     } else {
       setCurrentPlayerIndex(nextIndex);
       const nextPlayer = players[nextIndex];
@@ -127,6 +129,20 @@ const GameBoard = () => {
     }
   }
 
+  const handleNextRound = () => {
+    setIsRoundSummaryOpen(false);
+    // Use a timeout to ensure the dialog has time to close before the state updates and re-renders
+    setTimeout(() => {
+        setGamePhase('advancing_round');
+    }, 100);
+  };
+  
+  useEffect(() => {
+    if (gamePhase === 'advancing_round') {
+        advanceRound();
+    }
+  }, [gamePhase]);
+
   const initializeGame = useCallback(async () => {
     setGamePhase('loading');
     
@@ -140,6 +156,7 @@ const GameBoard = () => {
     setRound(0);
     setCurrentPlayerIndex(0);
     setPurchasedItemIds([]);
+    setIsRoundSummaryOpen(false);
 
     const human: Player = {
       id: 'player-human', name: '나', isHuman: true, seeds: INITIAL_SEEDS, bento: [], bonusCards: [],
@@ -181,19 +198,26 @@ const GameBoard = () => {
     setDice([d1 as 1 | 2 | 3 | 4 | 5 | 6, d2 as 1 | 2 | 3 | 4 | 5 | 6]);
 
     if (d1 === d2) {
-      const randomCard = bonusCards[Math.floor(Math.random() * bonusCards.length)];
-      setLastBonusCard(randomCard);
       
-      setPlayers(prev => prev.map(p => 
-        p.id === currentPlayer.id 
-          ? { ...p, bonusCards: [...p.bonusCards, randomCard] }
-          : p
-      ));
+      setPlayers(prev => prev.map(p => {
+        const playerCardIds = new Set(p.bonusCards.map(c => c.id));
+        const availableCards = bonusCards.filter(c => !playerCardIds.has(c.id));
+        
+        if (availableCards.length > 0) {
+          const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+          setLastBonusCard(randomCard);
+          
+          if (p.id === currentPlayer.id) {
+             toast({
+                title: '보너스 카드 획득!',
+                description: `비밀 보너스 카드를 받았습니다!`,
+              });
+             return { ...p, bonusCards: [...p.bonusCards, randomCard] };
+          }
+        }
+        return p;
+      }));
 
-      toast({
-        title: '보너스 카드 획득!',
-        description: `비밀 보너스 카드를 받았습니다!`,
-      });
     }
     setGamePhase('buying');
   };
@@ -266,14 +290,19 @@ const GameBoard = () => {
           setDice([d1 as 1 | 2 | 3 | 4 | 5 | 6,d2 as 1 | 2 | 3 | 4 | 5 | 6]);
 
           if (d1 === d2) {
-            const randomCard = bonusCards[Math.floor(Math.random() * bonusCards.length)];
-            setLastBonusCard(randomCard);
-            setPlayers(prev => prev.map(p => 
-                p.id === ai.id 
-                ? { ...p, bonusCards: [...p.bonusCards, randomCard] }
-                : p
-            ));
-            toast({ title: '보너스 카드 획득!', description: `${ai.name}님이 비밀 보너스 카드를 받았습니다!` });
+              setPlayers(prev => prev.map(p => {
+                if (p.id === ai.id) {
+                    const playerCardIds = new Set(p.bonusCards.map(c => c.id));
+                    const availableCards = bonusCards.filter(c => !playerCardIds.has(c.id));
+                    if (availableCards.length > 0) {
+                        const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+                        setLastBonusCard(randomCard);
+                        toast({ title: '보너스 카드 획득!', description: `${ai.name}님이 비밀 보너스 카드를 받았습니다!` });
+                        return { ...p, bonusCards: [...p.bonusCards, randomCard] };
+                    }
+                }
+                return p;
+            }));
           }
       }, 1500);
 
@@ -314,12 +343,6 @@ const GameBoard = () => {
 
     startAiTurn();
   }, [gamePhase, currentPlayer, advanceToNextPlayer, shopItems, toast, currentCategory, purchasedItemIds]);
-  
-  useEffect(() => {
-    if (gamePhase === 'advancing_round') {
-      advanceRound();
-    }
-  }, [gamePhase]);
 
   if (gamePhase === 'welcome') {
     return <WelcomeDialog onStart={initializeGame} />;
@@ -397,12 +420,12 @@ const GameBoard = () => {
         </div>
       </div>
        
-      {gamePhase === 'round_end' && (
+      {isRoundSummaryOpen && (
         <RoundSummary
           players={players}
           round={round}
-          onNextRound={() => setGamePhase('advancing_round')}
-          onClose={() => setGamePhase(currentPlayer.isHuman ? 'buying' : 'ai_turn')}
+          onNextRound={handleNextRound}
+          onClose={() => setIsRoundSummaryOpen(false)}
           isLastRound={round >= CATEGORIES.length - 1}
         />
       )}
