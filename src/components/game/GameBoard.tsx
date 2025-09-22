@@ -81,12 +81,14 @@ const GameBoard = () => {
   )), [players, currentPlayerIndex]);
 
   const advanceRound = () => {
-    const nextRound = round + 1;
-    setPurchasedItemIds([]);
-    if (nextRound >= CATEGORIES.length) {
+    if (round >= CATEGORIES.length - 1) {
       setGamePhase('game_over');
       return;
     }
+      
+    const nextRound = round + 1;
+    setPurchasedItemIds([]);
+
     setRound(nextRound);
     
     const newPlayerOrder = shuffle([...players]);
@@ -184,7 +186,7 @@ const GameBoard = () => {
 
     const d1 = Math.floor(Math.random() * 6) + 1;
     const d2 = Math.floor(Math.random() * 6) + 1;
-    setDice([d1, d2]);
+    setDice([d1 as 1 | 2 | 3 | 4 | 5 | 6, d2 as 1 | 2 | 3 | 4 | 5 | 6]);
     
     toast({
       description: `${currentPlayer.name}님이 주사위를 굴려 ${d1}과(와) ${d2}이(가) 나왔습니다.`,
@@ -279,7 +281,7 @@ const GameBoard = () => {
       setTimeout(() => {
           const d1 = Math.floor(Math.random() * 6) + 1;
           const d2 = Math.floor(Math.random() * 6) + 1;
-          setDice([d1,d2]);
+          setDice([d1 as 1 | 2 | 3 | 4 | 5 | 6,d2 as 1 | 2 | 3 | 4 | 5 | 6]);
           toast({ description: `${ai.name}이(가) 주사위를 굴려 ${d1}과(와) ${d2}이(가) 나왔습니다.`});
 
           if (d1 === d2) {
@@ -403,7 +405,7 @@ const GameBoard = () => {
             <PlayerStatus 
                 key={humanPlayer.id} 
                 player={humanPlayer} 
-                score={calculatePlayerScore(humanPlayer)} 
+                score={calculatePlayerScore(humanPlayer, false).score} 
                 isCurrent={true} 
             />
           )}
@@ -415,7 +417,7 @@ const GameBoard = () => {
                         <PlayerStatus 
                             key={player.id} 
                             player={player} 
-                            score={calculatePlayerScore(player)} 
+                            score={calculatePlayerScore(player, false).score} 
                             isCurrent={currentPlayer?.id === player.id}
                             isCompact={true}
                         />

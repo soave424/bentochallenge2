@@ -83,7 +83,7 @@ const BentoSlot = ({ item }: { item?: MenuItem }) => {
 
 interface PlayerStatusProps {
     player: Player;
-    score: Score;
+    score: Omit<Score, 'total'>;
     isCurrent: boolean;
     isCompact?: boolean;
 }

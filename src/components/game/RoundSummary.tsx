@@ -17,7 +17,7 @@ interface RoundSummaryProps {
 const RoundSummary = ({ players, round, onNextRound }: RoundSummaryProps) => {
   const scores = useMemo(() => players.map(p => ({
     player: p,
-    score: calculatePlayerScore(p),
+    score: calculatePlayerScore(p, false).score,
   })).sort((a, b) => b.score.total - a.score.total), [players]);
 
   const currentCategoryName = CATEGORY_NAMES[CATEGORIES[round]];
