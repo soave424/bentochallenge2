@@ -31,11 +31,11 @@ const WelcomeDialog = ({ onStart }: WelcomeDialogProps) => {
         <div className="grid gap-4 py-4 text-sm text-foreground">
           <ul className="list-disc list-inside space-y-2">
             <li>You start with <strong>15 seeds</strong> to buy items for your bento box.</li>
-            <li>On your turn, roll two dice. If the numbers are different, you get to buy one item.</li>
-            <li>If you roll doubles, all players draw a random <strong>Bonus Card</strong>!</li>
-            <li>You must buy at least one item from each of the 5 categories: <strong>Side Dish, Fruit, Drink, Container, and Snack</strong>.</li>
-            <li>The game ends when no one can afford more items. Players who fail to get one item from each category are eliminated.</li>
-            <li>The winner is the player with the highest total score (Consumption + Eco-friendly points).</li>
+            <li>The game has 5 rounds, one for each category: <strong>Side Dish, Fruit, Drink, Container, and Snack</strong>.</li>
+            <li>In each round, all players take one turn to buy <strong>one item</strong> from that round's category.</li>
+            <li>On your turn, roll two dice. If you roll doubles, all players draw a random <strong>Bonus Card</strong>!</li>
+            <li>The game ends after 5 rounds.</li>
+            <li>The winner is the player with the highest total score (Taste + Convenience + Eco-friendly points).</li>
           </ul>
         </div>
         <DialogFooter>

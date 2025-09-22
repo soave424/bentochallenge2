@@ -56,7 +56,8 @@ export type GamePhase =
   | 'game_over';
 
 export interface Score {
-  consumption: number;
+  taste: number;
+  convenience: number;
   eco: number;
   total: number;
 }

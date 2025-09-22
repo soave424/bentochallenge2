@@ -9,14 +9,18 @@ function countItems(bento: MenuItem[], predicate: (item: MenuItem) => boolean): 
 }
 
 export function calculatePlayerScore(player: Player): Score {
-  let consumption = 0;
+  let taste = 0;
+  let convenience = 0;
   let eco = 0;
   
   // Base scores from items
   for (const item of player.bento) {
-    consumption += item.taste + item.convenience;
+    taste += item.taste;
+    convenience += item.convenience;
     eco += item.eco;
   }
+
+  const consumption = taste + convenience;
 
   // Bonus card modifications
   for (const card of player.bonusCards) {
@@ -46,7 +50,9 @@ export function calculatePlayerScore(player: Player): Score {
       // Tax Cards
       case 'tax1': // 플라스틱세 부과
         if (hasItem(player.bento, '일회용 플라스틱 도시락')) {
-          consumption -= 2;
+          // This affects consumption score, which is taste + convenience. Let's reduce both.
+          taste -= 1;
+          convenience -= 1;
         }
         break;
       case 'tax3': // 과대포장 벌금
@@ -62,12 +68,15 @@ export function calculatePlayerScore(player: Player): Score {
     }
   }
 
-  let total = consumption + eco;
+  let tempConsumption = taste + convenience;
+  let total = tempConsumption + eco;
 
   // Final modifications based on state AFTER other calculations
   for (const card of player.bonusCards) {
     if (card.id === 'campaign3' && eco >= 10) { // 지구지킴이 인증
-      consumption += 2;
+      // consumption += 2; ambiguous, let's add to both
+      taste += 1;
+      convenience += 1;
       total += 2;
     }
     if (card.id === 'tax4' && countItems(player.bento, item => item.name.includes('수입')) >= 2) { // 탄소발자국 경고
@@ -75,5 +84,5 @@ export function calculatePlayerScore(player: Player): Score {
     }
   }
 
-  return { consumption, eco, total };
+  return { taste, convenience, eco, total };
 }

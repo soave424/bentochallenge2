@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import type { Player } from '@/lib/types';
 import { calculatePlayerScore } from '@/lib/scoring';
-import { Crown, Leaf, ShoppingBag, Shield, Medal } from 'lucide-react';
+import { Crown, Leaf, ShoppingBag, Utensils } from 'lucide-react';
 import { useMemo } from 'react';
 
 interface ResultsDialogProps {
@@ -34,7 +34,8 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
 
     const winner = sortedScores[0];
     const ecoChamp = [...scores].sort((a, b) => b.score.eco - a.score.eco)[0];
-    const consumptionChamp = [...scores].sort((a, b) => b.score.consumption - a.score.consumption)[0];
+    const tasteChamp = [...scores].sort((a, b) => b.score.taste - a.score.taste)[0];
+    const convenienceChamp = [...scores].sort((a, b) => b.score.convenience - a.score.convenience)[0];
 
     return (
     <Dialog open={true}>
@@ -64,27 +65,27 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
                     </div>
                     <div className="text-right">
                         <p className="font-bold">Total: {score.total}</p>
-                        <p className="text-xs text-muted-foreground">Eco: {score.eco}, Taste/Convenience: {score.consumption}</p>
+                        <p className="text-xs text-muted-foreground">Taste: {score.taste}, Convenience: {score.convenience}, Eco: {score.eco}</p>
                     </div>
                  </div>
             ))}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-4 text-center text-xs">
-            <div className="p-2 bg-accent/20 rounded">
-                <Medal className="mx-auto w-5 h-5 text-accent-foreground/80 mb-1"/>
-                <p className="font-bold">Sustainable Consumer</p>
-                <p>{winner.player.name}</p>
-            </div>
             <div className="p-2 bg-green-500/20 rounded">
                 <Leaf className="mx-auto w-5 h-5 text-green-600 dark:text-green-400 mb-1"/>
                 <p className="font-bold">Environmental Guardian</p>
                 <p>{ecoChamp.player.name}</p>
             </div>
+             <div className="p-2 bg-orange-500/20 rounded">
+                <Utensils className="mx-auto w-5 h-5 text-orange-600 dark:text-orange-400 mb-1"/>
+                <p className="font-bold">Gourmet</p>
+                <p>{tasteChamp.player.name}</p>
+            </div>
             <div className="p-2 bg-blue-500/20 rounded">
                 <ShoppingBag className="mx-auto w-5 h-5 text-blue-600 dark:text-blue-400 mb-1"/>
-                <p className="font-bold">Economical Consumer</p>
-                <p>{consumptionChamp.player.name}</p>
+                <p className="font-bold">Convenience King</p>
+                <p>{convenienceChamp.player.name}</p>
             </div>
         </div>
 
