@@ -3,6 +3,7 @@ import { Noto_Sans_KR } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const notoSansKr = Noto_Sans_KR({
   subsets: ['latin'],
@@ -26,6 +27,7 @@ export default function RootLayout({
       <body className={cn('font-sans antialiased', notoSansKr.variable)}>
         {children}
         <Toaster />
+        <SpeedInsights />
       </body>
     </html>
   );
