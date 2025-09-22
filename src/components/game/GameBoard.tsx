@@ -8,7 +8,7 @@ import { bonusCards, initialMenuItems } from '@/data/game-data';
 import { getMenuItems, saveMenuItems } from '@/lib/game-data-service';
 import { CATEGORIES }from '@/lib/types';
 import { shuffle, cn } from '@/lib/utils';
-import { ChevronsRight, Settings, Loader2, ArrowRight } from 'lucide-react';
+import { ChevronsRight, Settings, Loader2 } from 'lucide-react';
 
 import WelcomeDialog from './WelcomeDialog';
 import ResultsDialog from './ResultsDialog';
@@ -357,8 +357,6 @@ const GameBoard = () => {
           round={round + 1} 
           category={currentCategory}
           purchasedItemIds={purchasedItemIds}
-          showNextRoundButton={isRoundSummaryOpen}
-          onNextRound={advanceRound}
         />
       </div>
 
@@ -397,11 +395,12 @@ const GameBoard = () => {
         </div>
       </div>
        
-      {isRoundSummaryOpen && gamePhase !== 'game_over' && (
+      {isRoundSummaryOpen && (
         <RoundSummary
           players={players}
           round={round}
           onClose={() => setIsRoundSummaryOpen(false)}
+          onNextRound={advanceRound}
         />
       )}
 

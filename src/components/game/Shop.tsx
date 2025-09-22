@@ -7,9 +7,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Utensils, Smile, Leaf, ArrowRight } from 'lucide-react';
+import { Utensils, Smile, Leaf } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '../ui/button';
 
 interface ShopProps {
   items: MenuItem[];
@@ -18,8 +17,6 @@ interface ShopProps {
   round: number;
   category: Category;
   purchasedItemIds: string[];
-  showNextRoundButton: boolean;
-  onNextRound: () => void;
 }
 
 const categoryIcons: Record<Category, string> = {
@@ -30,7 +27,7 @@ const categoryIcons: Record<Category, string> = {
     'Snack': '🍪',
 }
 
-const Shop = ({ items, onBuy, disabled, category, round, purchasedItemIds, showNextRoundButton, onNextRound }: ShopProps) => {
+const Shop = ({ items, onBuy, disabled, category, round, purchasedItemIds }: ShopProps) => {
 
   return (
     <Card className="h-full flex flex-col">
@@ -40,11 +37,6 @@ const Shop = ({ items, onBuy, disabled, category, round, purchasedItemIds, showN
             <Badge variant="secondary" className="text-lg">라운드 {round}</Badge>
         </div>
         <div className='flex items-center gap-4'>
-             {showNextRoundButton && (
-                <Button onClick={onNextRound} className="animate-pulse">
-                    다음 라운드 <ArrowRight className='w-4 h-4 ml-2' />
-                </Button>
-            )}
             <h3 className="text-xl font-semibold font-headline flex items-center gap-2">
                 {categoryIcons[category]} {CATEGORY_NAMES[category]}
             </h3>
@@ -83,7 +75,7 @@ const Shop = ({ items, onBuy, disabled, category, round, purchasedItemIds, showN
                                             </div>
                                         )}
                                             <div className="absolute top-1 right-1">
-                                            <Badge>{item.price} 씨앗</Badge>
+                                            <Badge>{item.price} 시드</Badge>
                                             </div>
                                         </div>
                                         <div className="p-2 text-center">

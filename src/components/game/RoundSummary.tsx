@@ -4,17 +4,20 @@
 import { useMemo } from 'react';
 import type { Player } from '@/lib/types';
 import { calculatePlayerScore } from '@/lib/scoring';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 import { CATEGORIES, CATEGORY_NAMES } from '@/lib/types';
+import { ArrowRight } from 'lucide-react';
 
 interface RoundSummaryProps {
   players: Player[];
   round: number;
   onClose: () => void;
+  onNextRound: () => void;
 }
 
-const RoundSummary = ({ players, round, onClose }: RoundSummaryProps) => {
+const RoundSummary = ({ players, round, onClose, onNextRound }: RoundSummaryProps) => {
   const scores = useMemo(() => players.map(p => ({
     player: p,
     score: calculatePlayerScore(p, false).score,
@@ -69,6 +72,12 @@ const RoundSummary = ({ players, round, onClose }: RoundSummaryProps) => {
             </TableBody>
           </Table>
         </div>
+        <DialogFooter>
+            <Button variant="outline" onClick={onClose}>닫기</Button>
+            <Button onClick={onNextRound}>
+              다음 라운드로 <ArrowRight className="w-4 h-4 ml-2"/>
+            </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
