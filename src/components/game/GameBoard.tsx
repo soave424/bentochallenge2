@@ -136,7 +136,7 @@ const GameBoard = () => {
 
   // Check for eliminated players
   useEffect(() => {
-    if (gamePhase === 'welcome' || gamePhase === 'loading') return;
+    if (gamePhase === 'welcome' || gamePhase === 'loading' || players.length === 0) return;
 
     const minPrice = Math.min(...menuItems.map(i => i.price));
     
@@ -150,7 +150,7 @@ const GameBoard = () => {
         }
         return p;
     }));
-  }, [gamePhase, players, toast]);
+  }, [gamePhase, toast, players.length]);
 
   useEffect(() => {
     if (gamePhase === 'welcome' || gamePhase === 'loading') return;
