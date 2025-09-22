@@ -15,37 +15,40 @@ interface ScoreSliderProps {
   label: string;
   Icon: React.ElementType;
   iconColor: string;
+  isCompact?: boolean;
 }
 
-const ScoreSlider = ({ value, label, Icon, iconColor }: ScoreSliderProps) => {
+const ScoreSlider = ({ value, label, Icon, iconColor, isCompact }: ScoreSliderProps) => {
   const min = -20;
   const max = 20;
   const percentage = ((Math.max(min, Math.min(value, max)) - min) / (max - min)) * 100;
   const isNegative = value < 0;
 
   return (
-    <div className="space-y-1">
+    <div className={cn("space-y-1", isCompact && "space-y-0.5")}>
       <div className="flex justify-between items-center text-xs">
         <div className="flex items-center gap-1">
           <Icon className={cn('w-3.5 h-3.5', iconColor)} />
-          <span>{label}</span>
+          {!isCompact && <span>{label}</span>}
         </div>
         <span className="font-bold">{value}</span>
       </div>
-      <div className="w-full bg-muted rounded-full h-2.5 relative overflow-hidden">
-        <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-background z-10"></div>
-        <div
-          className={cn(
-            'h-full rounded-full absolute',
-            isNegative ? 'bg-red-500' : 'bg-blue-500'
-          )}
-          style={{
-            left: isNegative ? `${percentage}%` : '50%',
-            right: isNegative ? '50%' : `${100 - percentage}%`,
-            transition: 'all 0.5s ease-in-out',
-          }}
-        ></div>
-      </div>
+      {!isCompact && (
+        <div className="w-full bg-muted rounded-full h-2.5 relative overflow-hidden">
+          <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-background z-10"></div>
+          <div
+            className={cn(
+              'h-full rounded-full absolute',
+              isNegative ? 'bg-red-500' : 'bg-blue-500'
+            )}
+            style={{
+              left: isNegative ? `${percentage}%` : '50%',
+              right: isNegative ? '50%' : `${100 - percentage}%`,
+              transition: 'all 0.5s ease-in-out',
+            }}
+          ></div>
+        </div>
+      )}
     </div>
   );
 };
@@ -78,9 +81,41 @@ const BentoSlot = ({ item }: { item?: MenuItem }) => {
     )
 }
 
-const PlayerStatus = ({ player, score, isCurrent }: PlayerStatusProps) => {
+interface PlayerStatusProps {
+    player: Player;
+    score: Score;
+    isCurrent: boolean;
+    isCompact?: boolean;
+}
+
+const PlayerStatus = ({ player, score, isCurrent, isCompact = false }: PlayerStatusProps) => {
     const container = player.bento.find(item => item.category === 'Container');
     const foodItems = player.bento.filter(item => item.category !== 'Container' && item.category !== 'Drink');
+
+  if (isCompact) {
+    return (
+        <Card className={cn("transition-all", isCurrent ? 'ring-2 ring-primary shadow-lg' : '', player.eliminated && 'opacity-40 bg-destructive/10')}>
+             <div className="p-3">
+                 <div className="flex justify-between items-center mb-2">
+                    <p className="font-bold text-sm">{player.name}</p>
+                     {player.eliminated ? (
+                        <Badge variant="destructive" className="text-xs">탈락</Badge>
+                    ) : (
+                        <div className="flex items-center gap-1.5 text-xs">
+                            <Coins className="w-4 h-4 text-amber-500"/>
+                            <span className="font-semibold">{player.seeds}</span>
+                        </div>
+                    )}
+                 </div>
+                 <div className="grid grid-cols-3 gap-x-2">
+                    <ScoreSlider value={score.taste} label="맛" Icon={Utensils} iconColor="text-orange-500" isCompact />
+                    <ScoreSlider value={score.convenience} label="편리함" Icon={Smile} iconColor="text-blue-500" isCompact />
+                    <ScoreSlider value={score.eco} label="친환경" Icon={Leaf} iconColor="text-green-500" isCompact />
+                 </div>
+             </div>
+        </Card>
+    )
+  }
 
   return (
     <Card className={cn("transition-all", isCurrent ? 'ring-2 ring-primary shadow-lg' : '', player.eliminated && 'opacity-40 bg-destructive/10')}>

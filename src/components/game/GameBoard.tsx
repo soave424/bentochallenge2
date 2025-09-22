@@ -6,7 +6,7 @@ import { INITIAL_SEEDS, NUM_VIRTUAL_PLAYERS } from '@/lib/constants';
 import { bonusCards, initialMenuItems } from '@/data/game-data';
 import { getMenuItems, saveMenuItems } from '@/lib/game-data-service';
 import { getVirtualPlayerChoices } from '@/app/actions';
-import { CATEGORIES, CATEGORY_NAMES }from '@/lib/types';
+import { CATEGORIES }from '@/lib/types';
 import { calculatePlayerScore } from '@/lib/scoring';
 import { shuffle, cn } from '@/lib/utils';
 import { ChevronsRight, Settings } from 'lucide-react';
@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import RoundSummary from './RoundSummary';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const GameBoard = () => {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -35,12 +36,12 @@ const GameBoard = () => {
 
   const currentCategory = useMemo(() => CATEGORIES[round], [round]);
   const humanPlayer = useMemo(() => players.find(p => p.isHuman), [players]);
+  const otherPlayers = useMemo(() => players.filter(p => !p.isHuman), [players]);
   const currentPlayer = useMemo(() => players[currentPlayerIndex], [players, currentPlayerIndex]);
 
   const advanceToNextPlayer = useCallback(() => {
     let nextIndex = currentPlayerIndex + 1;
 
-    // Find the next non-eliminated player
     while(nextIndex < players.length && players[nextIndex].eliminated) {
       toast({description: `${players[nextIndex].name}님은 탈락하여 턴을 건너뜁니다.`})
       nextIndex++;
@@ -74,11 +75,10 @@ const GameBoard = () => {
   }, [humanPlayer, currentCategory, shopItems, purchasedItemIds, gamePhase]);
 
   const roundTurnOrder = useMemo(() => players.map((p, index) => (
-    <span key={p.id} className={cn("transition-opacity", index === currentPlayerIndex && "font-bold text-primary animate-pulse")}>
+    <span key={p.id} className={cn("transition-opacity whitespace-nowrap", index === currentPlayerIndex && "font-bold text-primary animate-pulse")}>
       {p.name}
     </span>
   )), [players, currentPlayerIndex]);
-
 
   const advanceRound = () => {
     const nextRound = round + 1;
@@ -121,7 +121,7 @@ const GameBoard = () => {
       id: 'player-human', name: '나', isHuman: true, seeds: INITIAL_SEEDS, bento: [], bonusCards: [], eliminated: false,
     };
     
-    const virtualPlayerNames = ['가상 플레이어 1', '가상 플레이어 2', '가상 플레이어 3'];
+    const virtualPlayerNames = ["지혜로운 라이언", "용감한 제이지", "친절한 어피치"];
     let initialPlayers: Player[] = [human];
 
     if (NUM_VIRTUAL_PLAYERS > 0) {
@@ -214,7 +214,6 @@ const GameBoard = () => {
     const hasBoughtFromCategory = currentPlayer.bento.some(i => i.category === currentCategory);
     const canAffordAny = shopItems.some(item => !purchasedItemIds.includes(item.id) && currentPlayer.seeds >= item.price);
     
-    // Allow skipping only if player HAS to (cannot afford anything OR has already bought)
     if (!hasBoughtFromCategory && canAffordAny) {
        toast({ title: '턴 넘기기 불가', description: '이번 라운드의 아이템을 아직 구매하지 않았습니다. 아이템을 구매해주세요!', variant: 'destructive' });
        return;
@@ -244,7 +243,6 @@ const GameBoard = () => {
       return;
     }
     
-    // --- Purchase Logic ---
     let finalSeeds = currentPlayer.seeds - item.price;
     if ( (item.name === '플라스틱 생수' || item.name === '페트병 주스') && currentPlayer.bonusCards.some(c => c.id === 'tax2') ) {
         toast({ title: '페트병 규제!', description: `'${item.name}' 구매로 씨앗 1개를 잃습니다.`, variant: 'destructive' });
@@ -263,22 +261,21 @@ const GameBoard = () => {
     setPurchasedItemIds(prev => [...prev, item.id]);
     toast({ title: '아이템 구매!', description: `${item.name}을(를) ${item.price} 씨앗으로 구매했습니다.` });
     
-    // --- Advance Turn ---
     setTimeout(() => {
       advanceToNextPlayer();
     }, 500);
   };
   
-  // AI player logic
   useEffect(() => {
     if (gamePhase !== 'ai_turn' || !currentPlayer || currentPlayer.isHuman) return;
 
     const ai = currentPlayer;
     
     const startAiTurn = () => {
-      toast({ title: `${ai.name}의 턴`, description: `${ai.name}이(가) 자신의 차례를 시작합니다.`});
-
-      // 1. AI 주사위 굴리기 (보너스 카드)
+      setTimeout(() => {
+        toast({ title: `${ai.name}의 턴`, description: `${ai.name}이(가) 자신의 차례를 시작합니다.`});
+      }, 1000);
+      
       setTimeout(() => {
           const d1 = Math.floor(Math.random() * 6) + 1;
           const d2 = Math.floor(Math.random() * 6) + 1;
@@ -295,9 +292,8 @@ const GameBoard = () => {
             ));
             toast({ title: '보너스 카드!', description: `${ai.name}님이 '${randomCard.name}' 카드를 받았습니다!` });
           }
-      }, 1000);
+      }, 2500);
 
-      // 2. AI 아이템 구매
       setTimeout(() => {
         let boughtAnItem = false;
         const hasBoughtFromCategory = ai.bento.some(i => i.category === currentCategory);
@@ -310,10 +306,8 @@ const GameBoard = () => {
                 const shoppingListItems = availableCategoryItems.filter(item => (ai.aiShoppingList || []).includes(item.id));
 
                 if(shoppingListItems.length > 0) {
-                    // Prefer item from shopping list, highest price first
                     itemToBuy = shoppingListItems.sort((a,b) => b.price - a.price)[0];
                 } else {
-                    // If no shopping list item is available, pick the highest price one from what's left
                     itemToBuy = availableCategoryItems.sort((a,b) => b.price - a.price)[0];
                 }
 
@@ -348,7 +342,7 @@ const GameBoard = () => {
         setTimeout(() => {
           advanceToNextPlayer();
         }, 1500);
-      }, 2500); // Delay between rolling and buying for AI
+      }, 4000);
     };
 
     startAiTurn();
@@ -376,11 +370,11 @@ const GameBoard = () => {
       <div className="lg:col-span-2">
         <div className="mb-4 mt-8 p-3 bg-secondary/50 rounded-lg text-center">
             <p className="text-sm text-muted-foreground">이번 라운드 순서</p>
-            <div className="font-semibold text-lg flex items-center justify-center gap-x-4 flex-wrap">
+            <div className="font-semibold text-lg flex items-center justify-center gap-x-2 flex-nowrap overflow-x-auto">
                 {roundTurnOrder.map((name, index) => (
                     <div key={index} className="flex items-center gap-2">
                         {name}
-                        {index < players.length - 1 && <ChevronsRight className="w-5 h-5 text-muted-foreground" />}
+                        {index < players.length - 1 && <ChevronsRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />}
                     </div>
                 ))}
             </div>
@@ -410,8 +404,24 @@ const GameBoard = () => {
                 key={humanPlayer.id} 
                 player={humanPlayer} 
                 score={calculatePlayerScore(humanPlayer)} 
-                isCurrent={true} // The main status is always the human player's
+                isCurrent={true} 
             />
+          )}
+          {otherPlayers.length > 0 && (
+             <ScrollArea className="h-[40vh] pr-3">
+                 <div className="space-y-2">
+                    <p className="text-sm font-semibold text-muted-foreground px-2">다른 플레이어</p>
+                    {otherPlayers.map(player => (
+                        <PlayerStatus 
+                            key={player.id} 
+                            player={player} 
+                            score={calculatePlayerScore(player)} 
+                            isCurrent={currentPlayer?.id === player.id}
+                            isCompact={true}
+                        />
+                    ))}
+                 </div>
+             </ScrollArea>
           )}
         </div>
       </div>
@@ -432,5 +442,3 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
-
-    

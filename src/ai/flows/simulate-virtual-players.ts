@@ -57,8 +57,9 @@ Given the following constraints and the menu items, create a plausible shopping 
 
 Constraints:
 - Each virtual player starts with {{availableSeeds}} seeds.
-- Players should aim to maximize their taste, convenience and eco scores, while spending their seeds.
+- Players should aim to get a good balance of taste, convenience and eco scores, while spending their seeds.
 - The total cost of items in the list should be close to, but not exceeding, the available seeds.
+- Each player should try to buy items from different categories.
 
 Menu Items (only use the id for the output):
 {{#each menuItems}}
