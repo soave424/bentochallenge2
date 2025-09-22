@@ -241,13 +241,13 @@ const GameBoard = () => {
     }
 
     if (currentPlayer.seeds < item.price) {
-      toast({ title: '씨앗이 부족해요!', description: `${item.price} 씨앗이 필요하지만 ${currentPlayer.seeds}개만 가지고 있어요.`, variant: 'destructive' });
+      toast({ title: '시드가 부족해요!', description: `${item.price} 시드가 필요하지만 ${currentPlayer.seeds}개만 가지고 있어요.`, variant: 'destructive' });
       return;
     }
     
     let finalSeeds = currentPlayer.seeds - item.price;
     if ( (item.name === '플라스틱 생수' || item.name === '페트병 주스') && currentPlayer.bonusCards.some(c => c.id === 'tax2') ) {
-        toast({ title: '페트병 규제!', description: `'${item.name}' 구매로 씨앗 1개를 잃습니다.`, variant: 'destructive' });
+        toast({ title: '페트병 규제!', description: `'${item.name}' 구매로 시드 1개를 잃습니다.`, variant: 'destructive' });
         finalSeeds = Math.max(0, finalSeeds - 1);
     }
 
@@ -259,7 +259,7 @@ const GameBoard = () => {
 
     setPlayers(prev => prev.map(p => (p.id === currentPlayer.id ? updatedPlayer : p)));
     setPurchasedItemIds(prev => [...prev, item.id]);
-    toast({ title: '아이템 구매!', description: `${item.name}을(를) ${item.price} 씨앗으로 구매했습니다.` });
+    toast({ title: '아이템 구매!', description: `${item.name}을(를) ${item.price} 시드로 구매했습니다.` });
     
     setTimeout(() => {
       advanceToNextPlayer();
@@ -310,7 +310,7 @@ const GameBoard = () => {
                 if (itemToBuy) {
                     let finalSeeds = ai.seeds - itemToBuy.price;
                      if ((itemToBuy!.name === '플라스틱 생수' || itemToBuy!.name === '페트병 주스') && ai.bonusCards.some(c => c.id === 'tax2')) {
-                        toast({ title: '페트병 규제!', description: `${ai.name}이(가) '${itemToBuy!.name}' 구매로 씨앗 1개를 잃습니다.`, variant: 'destructive' });
+                        toast({ title: '페트병 규제!', description: `${ai.name}이(가) '${itemToBuy!.name}' 구매로 시드 1개를 잃습니다.`, variant: 'destructive' });
                         finalSeeds = Math.max(0, finalSeeds - 1);
                     }
                     const updatedAiPlayer = {
@@ -322,7 +322,7 @@ const GameBoard = () => {
                     
                     setPlayers(prev => prev.map(p => p.id === ai.id ? updatedAiPlayer : p));
                     setPurchasedItemIds(prev => [...prev, itemToBuy!.id]);
-                    toast({ title: `${ai.name} 구매!`, description: `${ai.name}이(가) ${itemToBuy.name}을(를) ${itemToBuy.price} 씨앗으로 샀습니다.` });
+                    toast({ title: `${ai.name} 구매!`, description: `${ai.name}이(가) ${itemToBuy.name}을(를) ${itemToBuy.price} 시드로 샀습니다.` });
                 }
             }
         }

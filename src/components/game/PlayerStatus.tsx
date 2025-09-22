@@ -107,7 +107,7 @@ const PlayerStatus = ({ player, isCurrent, isCompact = false }: PlayerStatusProp
                         <div className="flex items-center gap-1" title="편리함"><Smile className="w-4 h-4 text-blue-500 shrink-0" /><span>{score.convenience}</span></div>
                         <div className="flex items-center gap-1" title="친환경"><Leaf className="w-4 h-4 text-green-500 shrink-0" /><span>{score.eco}</span></div>
                          <Separator orientation="vertical" className="h-4"/>
-                        <div className="flex items-center gap-1 font-semibold" title="씨앗"><Coins className="w-4 h-4 text-amber-500 shrink-0"/><span>{player.seeds}</span></div>
+                        <div className="flex items-center gap-1 font-semibold" title="시드"><Coins className="w-4 h-4 text-amber-500 shrink-0"/><span>{player.seeds}</span></div>
                     </div>
                 </div>
              </div>

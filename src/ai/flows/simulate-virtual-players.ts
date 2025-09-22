@@ -21,7 +21,7 @@ const MenuItemSchema = z.object({
 });
 
 const SimulateVirtualPlayersInputSchema = z.object({
-  availableSeeds: z.number().describe('The number of seeds available to each virtual player.'),
+  availableSeeds: z.number().describe('각 가상 플레이어에게 사용 가능한 시드의 수입니다.'),
   menuItems: z.array(MenuItemSchema).describe('The list of available menu items with their properties.'),
   numVirtualPlayers: z.number().describe('The number of virtual players to simulate.'),
 });
@@ -49,16 +49,16 @@ const simulateVirtualPlayersPrompt = ai.definePrompt({
   },
   prompt: `You are an AI that simulates the choices of virtual players in a game called Eco Bento Challenge.
 
-The game involves players selecting items from a menu to create a bento box while staying within a budget. Each player starts with a fixed number of seeds (currency) to spend.
+The game involves players selecting items from a menu to create a bento box while staying within a budget. Each player starts with a fixed number of 시드 (currency) to spend.
 
 The menu consists of items from different categories. Each player should select a variety of items.
 
 Given the following constraints and the menu items, create a plausible shopping list for each virtual player for the entire game.
 
 Constraints:
-- Each virtual player starts with {{availableSeeds}} seeds.
-- Players should aim to get a good balance of taste, convenience and eco scores, while spending their seeds.
-- The total cost of items in the list should be close to, but not exceeding, the available seeds.
+- Each virtual player starts with {{availableSeeds}} 시드.
+- Players should aim to get a good balance of taste, convenience and eco scores, while spending their 시드.
+- The total cost of items in the list should be close to, but not exceeding, the available 시드.
 - Each player should try to buy items from different categories.
 
 Menu Items (only use the id for the output):

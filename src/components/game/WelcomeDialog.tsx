@@ -30,7 +30,7 @@ const WelcomeDialog = ({ onStart }: WelcomeDialogProps) => {
         </DialogHeader>
         <div className="grid gap-4 py-4 text-sm text-foreground">
           <ul className="list-disc list-inside space-y-2">
-            <li><strong>15개의 씨앗</strong>으로 게임을 시작하며, 이 씨앗으로 도시락 아이템을 구매합니다.</li>
+            <li><strong>15개의 시드</strong>로 게임을 시작하며, 이 시드로 도시락 아이템을 구매합니다.</li>
             <li>게임은 <strong>식사, 과일, 음료, 용기, 간식</strong> 5개 카테고리에 걸쳐 총 5라운드로 진행됩니다.</li>
             <li>각 라운드마다 모든 플레이어는 해당 카테고리에서 <strong>아이템 1개</strong>를 구매할 수 있습니다.</li>
             <li>주사위를 굴려 같은 숫자가 나오면, 모든 플레이어가 무작위 <strong>보너스 카드</strong>를 받습니다!</li>

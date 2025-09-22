@@ -28,7 +28,7 @@ const BonusCardSchema = z.object({
 });
 
 const RecommendBentoItemsInputSchema = z.object({
-  remainingBudget: z.number().describe('The player\'s remaining budget in seeds.'),
+  remainingBudget: z.number().describe('플레이어의 남은 예산(시드).'),
   currentBento: z.array(BentoItemSchema).describe('The items currently in the player\'s bento.'),
   availableItems: z.array(BentoItemSchema).describe('The items available for purchase.'),
   bonusCards: z.array(BonusCardSchema).optional().describe('The bonus cards the player has.'),
