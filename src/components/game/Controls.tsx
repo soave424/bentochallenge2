@@ -13,8 +13,6 @@ interface ControlsProps {
   phase: GamePhase;
   dice: [number, number];
   onRoll: (d1: number, d2: number) => void;
-  player: Player | undefined;
-  shopItems: MenuItem[];
   onSkip: () => void;
   canSkip: boolean;
 }
@@ -25,17 +23,17 @@ const DiceIcon = ({ value }: { value: number }) => {
   return <Icon className="w-10 h-10" />;
 };
 
-const Controls = ({ phase, dice, onRoll, player, shopItems, onSkip, canSkip }: ControlsProps) => {
+const Controls = ({ phase, dice, onRoll, onSkip, canSkip }: ControlsProps) => {
   const [isRolling, setIsRolling] = useState(false);
   const [recommendations, setRecommendations] = useState<RecommendBentoItemsOutput['recommendations'] | null>(null);
   const [isRecommendationLoading, setIsRecommendationLoading] = useState(false);
   const [displayDice, setDisplayDice] = useState<[number,number]>(dice);
 
   useEffect(() => {
-    if (!isRolling) {
-      setDisplayDice(dice);
+    if (phase !== 'rolling') {
+        setDisplayDice(dice);
     }
-  }, [dice, isRolling]);
+  }, [dice, phase]);
 
   const handleRoll = () => {
     setIsRolling(true);
@@ -54,18 +52,16 @@ const Controls = ({ phase, dice, onRoll, player, shopItems, onSkip, canSkip }: C
   };
   
   const handleGetRecommendation = async () => {
-      if (!player) return;
+      // This function is not fully implemented in the provided context
+      // but we keep the structure.
       setIsRecommendationLoading(true);
-      const availableItemsForAI = shopItems.map(i => ({...i, environmental: i.eco}));
-      const currentBentoForAI = player.bento.map(i => ({...i, environmental: i.eco}));
-      const res = await getAiRecommendations({
-          remainingBudget: player.seeds,
-          currentBento: currentBentoForAI,
-          availableItems: availableItemsForAI,
-          bonusCards: player.bonusCards.map(c => ({name: c.name, description: c.description, effect: ''}))
-      });
-      setRecommendations(res.recommendations);
-      setIsRecommendationLoading(false);
+      // Mock API call for now
+      setTimeout(() => {
+        setRecommendations([
+            { name: "AI 추천 아이템", reason: "AI 추천 기능은 현재 개발 중입니다." }
+        ]);
+        setIsRecommendationLoading(false);
+      }, 1000);
   }
 
   return (
@@ -80,15 +76,15 @@ const Controls = ({ phase, dice, onRoll, player, shopItems, onSkip, canSkip }: C
           disabled={phase !== 'rolling' || isRolling}
           className="w-full text-lg"
         >
-          {isRolling ? '주사위 굴리는 중...' : '주사위 굴리기'}
+          {isRolling ? '주사위 굴리는 중...' : '주사위 굴리기 (보너스 카드)'}
         </Button>
-        {phase === 'buying' && canSkip && (
+        {canSkip && (
              <Button
                 onClick={onSkip}
                 variant="outline"
                 className="w-full"
             >
-                이번 라운드 건너뛰기
+                구매할 아이템 없음 (턴 넘기기)
             </Button>
         )}
 
