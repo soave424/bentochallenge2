@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Player, GamePhase, MenuItem, BonusCard, Category } from '@/lib/types';
 import { INITIAL_SEEDS, NUM_VIRTUAL_PLAYERS } from '@/lib/constants';
-import { bonusCards } from '@/data/game-data';
-import { getMenuItems } from '@/lib/game-data-service';
+import { bonusCards, initialMenuItems } from '@/data/game-data';
+import { getMenuItems, saveMenuItems } from '@/lib/game-data-service';
 import { getVirtualPlayerChoices } from '@/app/actions';
 import { CATEGORIES, CATEGORY_NAMES }from '@/lib/types';
 import { calculatePlayerScore } from '@/lib/scoring';
@@ -37,34 +37,10 @@ const GameBoard = () => {
   const humanPlayer = useMemo(() => players.find(p => p.isHuman), [players]);
   const currentPlayer = useMemo(() => players[currentPlayerIndex], [players, currentPlayerIndex]);
 
-  const canHumanPlayerSkip = useMemo(() => {
-    if (!humanPlayer || !currentCategory || gamePhase !== 'buying') return false;
-    
-    // 이미 샀으면 스킵 가능
-    const hasBoughtFromCategory = humanPlayer.bento.some(i => i.category === currentCategory);
-    if(hasBoughtFromCategory){
-      return true;
-    }
-    
-    // 살 수 있는 아이템이 하나라도 있으면 스킵 불가
-    const canAffordAny = shopItems.some(item => 
-        !purchasedItemIds.includes(item.id) && humanPlayer.seeds >= item.price
-    );
-
-    // 살 수 있는게 없으면 스킵 가능
-    return !canAffordAny;
-  }, [humanPlayer, currentCategory, shopItems, purchasedItemIds, gamePhase]);
-
-
-  const roundTurnOrder = useMemo(() => players.map((p, index) => (
-    <span key={p.id} className={cn("transition-opacity", index === currentPlayerIndex && "font-bold text-primary animate-pulse")}>
-      {p.name}
-    </span>
-  )), [players, currentPlayerIndex]);
-
   const nextTurn = useCallback(() => {
     setCurrentPlayerIndex(prevIndex => {
       let nextIndex = prevIndex + 1;
+      // Find the next non-eliminated player
       while(nextIndex < players.length && players[nextIndex].eliminated) {
         nextIndex++;
       }
@@ -77,6 +53,29 @@ const GameBoard = () => {
     });
   }, [players]);
 
+  const canHumanPlayerSkip = useMemo(() => {
+    if (!humanPlayer || !currentCategory || gamePhase !== 'buying') return false;
+    
+    const hasBoughtFromCategory = humanPlayer.bento.some(i => i.category === currentCategory);
+    if(hasBoughtFromCategory){
+      return true;
+    }
+    
+    const canAffordAny = shopItems.some(item => 
+        !purchasedItemIds.includes(item.id) && humanPlayer.seeds >= item.price
+    );
+
+    return !canAffordAny;
+  }, [humanPlayer, currentCategory, shopItems, purchasedItemIds, gamePhase]);
+
+
+  const roundTurnOrder = useMemo(() => players.map((p, index) => (
+    <span key={p.id} className={cn("transition-opacity", index === currentPlayerIndex && "font-bold text-primary animate-pulse")}>
+      {p.name}
+    </span>
+  )), [players, currentPlayerIndex]);
+
+
   const advanceRound = () => {
     const nextRound = round + 1;
     setPurchasedItemIds([]);
@@ -85,12 +84,13 @@ const GameBoard = () => {
       return;
     }
     setRound(nextRound);
+    
     const newPlayerOrder = shuffle([...players]);
     setPlayers(newPlayerOrder);
     
     const firstPlayerIndex = newPlayerOrder.findIndex(p => !p.eliminated);
     if (firstPlayerIndex === -1) {
-        setGamePhase('game_over');
+        setGamePhase('game_over'); // All players eliminated
         return;
     }
 
@@ -101,12 +101,17 @@ const GameBoard = () => {
 
   const initializeGame = useCallback(async () => {
     setGamePhase('loading');
+    
+    let currentMenuItems = await getMenuItems();
+    if (!currentMenuItems || currentMenuItems.length === 0) {
+        await saveMenuItems(initialMenuItems);
+        currentMenuItems = initialMenuItems;
+    }
+    setMenuItems(currentMenuItems);
+
     setRound(0);
     setCurrentPlayerIndex(0);
     setPurchasedItemIds([]);
-
-    const currentMenuItems = await getMenuItems();
-    setMenuItems(currentMenuItems);
 
     const human: Player = {
       id: 'player-human', name: '나', isHuman: true, seeds: INITIAL_SEEDS, bento: [], bonusCards: [], eliminated: false,
@@ -118,8 +123,8 @@ const GameBoard = () => {
     if (NUM_VIRTUAL_PLAYERS > 0) {
        const aiChoices = await getVirtualPlayerChoices({
         availableSeeds: INITIAL_SEEDS,
-        menuItems: menuItems.map(m => ({
-          number: m.id, name: m.name, price: m.price, taste: m.taste, convenience: m.convenience, ecoFriendliness: m.eco,
+        menuItems: currentMenuItems.map(m => ({
+          number: m.id, name: m.name, price: m.price, taste: m.taste, convenience: m.convenience, eco: m.eco,
         })),
         numVirtualPlayers: NUM_VIRTUAL_PLAYERS,
       });
@@ -131,12 +136,13 @@ const GameBoard = () => {
     }
     
     const shuffledPlayers = shuffle(initialPlayers);
-    const firstPlayerIndex = shuffledPlayers.findIndex(p => !p.eliminated);
-
     setPlayers(shuffledPlayers);
-    setCurrentPlayerIndex(firstPlayerIndex);
+    
+    const firstPlayerIndex = shuffledPlayers.findIndex(p => !p.eliminated);
+    setCurrentPlayerIndex(firstPlayerIndex !== -1 ? firstPlayerIndex : 0);
+
     setGamePhase('player_turn');
-  }, [menuItems]);
+  }, []);
   
   // Update shop items when round changes
   useEffect(() => {
@@ -151,29 +157,50 @@ const GameBoard = () => {
       const minPriceInGame = Math.min(...menuItems.map(i => i.price));
       
       const updatedPlayers = players.map(p => {
-          if (!p.eliminated && p.seeds < minPriceInGame) {
-              const canAffordAnythingEver = menuItems.some(item => p.seeds >= item.price);
-              if (!canAffordAnythingEver) {
-                   if(p.isHuman) {
-                       toast({ title: "탈락", description: `씨앗이 부족하여 더 이상 아이템을 구매할 수 없습니다.`, variant: 'destructive'});
-                   } else {
-                       toast({ title: "플레이어 탈락", description: `${p.name}님은 씨앗이 부족하여 더 이상 아이템을 구매할 수 없습니다.`, variant: 'destructive'});
-                   }
-                   return { ...p, eliminated: true };
-              }
+          if (p.eliminated) return p;
+
+          const hasBoughtForRound = p.bento.some(item => item.category === currentCategory);
+          const canAffordAnythingThisRound = shopItems.some(item => !purchasedItemIds.includes(item.id) && p.seeds >= item.price);
+          
+          if (!hasBoughtForRound && !canAffordAnythingThisRound) {
+               if(p.isHuman) {
+                   toast({ title: "아이템 구매 불가", description: `이번 라운드에 구매할 수 있는 아이템이 없습니다. 턴을 건너뜁니다.`, variant: 'destructive'});
+               } else {
+                   toast({ title: "아이템 구매 불가", description: `${p.name}님은 이번 라운드에 구매할 수 있는 아이템이 없습니다.`, variant: 'destructive'});
+               }
           }
+          
+          // Check for permanent elimination
+          const canEverAffordAnything = menuItems.some(item => p.seeds >= item.price);
+          if (!canEverAffordAnything) {
+               if(p.isHuman) {
+                   toast({ title: "탈락", description: `씨앗이 부족하여 더 이상 아이템을 구매할 수 없습니다.`, variant: 'destructive'});
+               } else {
+                   toast({ title: "플레이어 탈락", description: `${p.name}님은 씨앗이 부족하여 더 이상 아이템을 구매할 수 없습니다.`, variant: 'destructive'});
+               }
+               return { ...p, eliminated: true };
+          }
+
           return p;
       });
   
       if (JSON.stringify(updatedPlayers) !== JSON.stringify(players)) {
           setPlayers(updatedPlayers);
       }
-  }, [players, toast, gamePhase, menuItems]);
+  }, [shopItems, players, round, toast, gamePhase, menuItems, currentCategory, purchasedItemIds]);
 
   // Main Game Loop Controller
   useEffect(() => {
     if (['welcome', 'loading', 'round_summary', 'game_over'].includes(gamePhase)) return;
-    if (!currentPlayer) return;
+    if (!currentPlayer) {
+      if(players.length > 0) {
+        // Handle case where currentPlayerIndex might be out of bounds after elimination
+        const nextAvailablePlayer = players.findIndex(p => !p.eliminated);
+        if(nextAvailablePlayer !== -1) setCurrentPlayerIndex(nextAvailablePlayer);
+        else setGamePhase('game_over');
+      }
+      return;
+    };
 
     if (currentPlayer.eliminated) {
         toast({description: `${currentPlayer.name}님은 탈락하여 턴을 건너뜁니다.`})
@@ -188,7 +215,7 @@ const GameBoard = () => {
             setGamePhase('ai_turn');
         }
     }
-  }, [gamePhase, currentPlayer, nextTurn, toast]);
+  }, [gamePhase, currentPlayer, players, nextTurn, toast]);
 
   const handleRollDice = () => {
     if (gamePhase !== 'rolling') return;
@@ -258,6 +285,7 @@ const GameBoard = () => {
         const newSeeds = p.seeds - item.price;
         let finalSeeds = newSeeds;
 
+        // '페트병 규제' 보너스 카드 효과 적용
         if ( (item.name === '플라스틱 생수' || item.name === '페트병 주스') && p.bonusCards.some(c => c.id === 'tax2') ) {
           toast({ title: '페트병 규제!', description: `'${item.name}' 구매로 씨앗 1개를 잃습니다.`, variant: 'destructive' });
           finalSeeds = newSeeds > 0 ? newSeeds -1 : 0;
@@ -276,91 +304,96 @@ const GameBoard = () => {
     
     toast({ title: '아이템 구매!', description: `${item.name}을(를) ${item.price} 씨앗으로 구매했습니다.` });
     
+    // 구매 후 다음 턴으로
     setTimeout(() => nextTurn(), 1500);
   };
   
   // AI player logic
   useEffect(() => {
-    if (gamePhase === 'ai_turn' && !currentPlayer.isHuman) {
-      const ai = currentPlayer;
-      
-      const startAiTurn = () => {
-        toast({ title: `${ai.name}의 턴`, description: `${ai.name}이(가) 자신의 차례를 시작합니다.`});
+    if (gamePhase !== 'ai_turn' || !currentPlayer || currentPlayer.isHuman) return;
 
-        // 1. AI 주사위 굴리기 (보너스 카드)
-        setTimeout(() => {
-            const d1 = Math.floor(Math.random() * 6) + 1;
-            const d2 = Math.floor(Math.random() * 6) + 1;
-            setDice([d1,d2]);
-            toast({ description: `${ai.name}이(가) 주사위를 굴려 ${d1}과(와) ${d2}이(가) 나왔습니다.`});
+    const ai = currentPlayer;
+    
+    const startAiTurn = () => {
+      toast({ title: `${ai.name}의 턴`, description: `${ai.name}이(가) 자신의 차례를 시작합니다.`});
 
-            if (d1 === d2) {
-              const randomCard = bonusCards[Math.floor(Math.random() * bonusCards.length)];
-              setLastBonusCard(randomCard);
-              setPlayers(prev => prev.map(p => 
-                  p.id === ai.id 
-                  ? { ...p, bonusCards: [...p.bonusCards, randomCard] }
-                  : p
-              ));
-              toast({ title: '보너스 카드!', description: `${ai.name}님이 '${randomCard.name}' 카드를 받았습니다!` });
+      // 1. AI 주사위 굴리기 (보너스 카드)
+      setTimeout(() => {
+          const d1 = Math.floor(Math.random() * 6) + 1;
+          const d2 = Math.floor(Math.random() * 6) + 1;
+          setDice([d1,d2]);
+          toast({ description: `${ai.name}이(가) 주사위를 굴려 ${d1}과(와) ${d2}이(가) 나왔습니다.`});
+
+          if (d1 === d2) {
+            const randomCard = bonusCards[Math.floor(Math.random() * bonusCards.length)];
+            setLastBonusCard(randomCard);
+            setPlayers(prev => prev.map(p => 
+                p.id === ai.id 
+                ? { ...p, bonusCards: [...p.bonusCards, randomCard] }
+                : p
+            ));
+            toast({ title: '보너스 카드!', description: `${ai.name}님이 '${randomCard.name}' 카드를 받았습니다!` });
+          }
+      }, 1000);
+
+      // 2. AI 아이템 구매
+      setTimeout(() => {
+        let boughtAnItem = false;
+        const hasBoughtFromCategory = ai.bento.some(i => i.category === currentCategory);
+
+        if (!hasBoughtFromCategory) {
+            const availableCategoryItems = shopItems.filter(item => !purchasedItemIds.includes(item.id) && ai.seeds >= item.price);
+
+            if (availableCategoryItems.length > 0) {
+                let itemToBuy: MenuItem | undefined;
+                // Try to buy from AI shopping list first
+                const shoppingListItems = availableCategoryItems.filter(item => ai.aiShoppingList?.includes(item.id));
+
+                if(shoppingListItems.length > 0) {
+                    // Buy the most expensive item from the shopping list they can afford
+                    itemToBuy = shoppingListItems.sort((a,b) => b.price - a.price)[0];
+                } else {
+                    // Fallback: buy the most expensive item they can afford from the available items
+                    itemToBuy = availableCategoryItems.sort((a,b) => b.price - a.price)[0];
+                }
+
+                if (itemToBuy) {
+                    boughtAnItem = true;
+                    setPlayers(prev => prev.map(p => {
+                        if (p.id === ai.id) {
+                            const newSeeds = p.seeds - itemToBuy!.price;
+                            let finalSeeds = newSeeds;
+                            // '페트병 규제' 보너스 카드 효과 적용
+                            if ((itemToBuy!.name === '플라스틱 생수' || itemToBuy!.name === '페트병 주스') && p.bonusCards.some(c => c.id === 'tax2')) {
+                                toast({ title: '페트병 규제!', description: `${ai.name}이(가) '${itemToBuy!.name}' 구매로 씨앗 1개를 잃습니다.`, variant: 'destructive' });
+                                finalSeeds = newSeeds > 0 ? newSeeds -1 : 0;
+                            }
+                            return {
+                                ...p,
+                                seeds: finalSeeds,
+                                bento: [...p.bento, itemToBuy!],
+                                aiShoppingList: p.aiShoppingList?.filter(id => id !== itemToBuy!.id)
+                            };
+                        }
+                        return p;
+                    }));
+                    setPurchasedItemIds(prev => [...prev, itemToBuy!.id]);
+                    toast({ title: `${ai.name} 구매!`, description: `${ai.name}이(가) ${itemToBuy.name}을(를) ${itemToBuy.price} 씨앗으로 샀습니다.` });
+                }
             }
-        }, 1000);
+        }
 
-        // 2. AI 아이템 구매
-        setTimeout(() => {
-          let boughtAnItem = false;
-          const hasBoughtFromCategory = ai.bento.some(i => i.category === currentCategory);
+        if (!boughtAnItem) {
+            const reason = ai.bento.some(i => i.category === currentCategory) ? '이미 구매를 마쳤습니다' : '살 수 있는 아이템이 없습니다';
+            toast({ description: `${ai.name}은(는) ${reason}. 턴을 마칩니다.` });
+        }
+        
+        setTimeout(() => nextTurn(), 2000);
+      }, 2500); // Delay between rolling and buying for AI
+    };
 
-          if (!hasBoughtFromCategory) {
-              const availableCategoryItems = shopItems.filter(item => !purchasedItemIds.includes(item.id) && ai.seeds >= item.price);
-
-              if (availableCategoryItems.length > 0) {
-                  let itemToBuy: MenuItem | undefined;
-                  const shoppingListItems = availableCategoryItems.filter(item => ai.aiShoppingList?.includes(item.id));
-
-                  if(shoppingListItems.length > 0) {
-                      itemToBuy = shoppingListItems.sort((a,b) => b.price - a.price)[0];
-                  } else {
-                      // Fallback: buy the most expensive item they can afford
-                      itemToBuy = availableCategoryItems.sort((a,b) => b.price - a.price)[0];
-                  }
-
-                  if (itemToBuy) {
-                      boughtAnItem = true;
-                      setPlayers(prev => prev.map(p => {
-                          if (p.id === ai.id) {
-                              const newSeeds = p.seeds - itemToBuy!.price;
-                              let finalSeeds = newSeeds;
-                              if ((itemToBuy!.name === '플라스틱 생수' || itemToBuy!.name === '페트병 주스') && p.bonusCards.some(c => c.id === 'tax2')) {
-                                  toast({ title: '페트병 규제!', description: `${ai.name}이(가) '${itemToBuy!.name}' 구매로 씨앗 1개를 잃습니다.`, variant: 'destructive' });
-                                  finalSeeds = newSeeds > 0 ? newSeeds -1 : 0;
-                              }
-                              return {
-                                  ...p,
-                                  seeds: finalSeeds,
-                                  bento: [...p.bento, itemToBuy!],
-                                  aiShoppingList: p.aiShoppingList?.filter(id => id !== itemToBuy!.id)
-                              };
-                          }
-                          return p;
-                      }));
-                      setPurchasedItemIds(prev => [...prev, itemToBuy!.id]);
-                      toast({ title: `${ai.name} 구매!`, description: `${ai.name}이(가) ${itemToBuy.name}을(를) ${itemToBuy.price} 씨앗으로 샀습니다.` });
-                  }
-              }
-          }
-
-          if (!boughtAnItem) {
-              toast({ description: `${ai.name}은(는) 살 수 있는 아이템이 없어 턴을 마칩니다.` });
-          }
-          
-          setTimeout(() => nextTurn(), 2000);
-        }, 2500); // Delay between rolling and buying for AI
-      };
-
-      startAiTurn();
-    }
-  }, [gamePhase, currentPlayer, nextTurn, shopItems, toast, currentCategory, purchasedItemIds, bonusCards]);
+    startAiTurn();
+  }, [gamePhase, currentPlayer, nextTurn, shopItems, toast, currentCategory, purchasedItemIds]);
   
   if (gamePhase === 'welcome') {
     return <WelcomeDialog onStart={initializeGame} />;
@@ -388,7 +421,7 @@ const GameBoard = () => {
                 {roundTurnOrder.map((name, index) => (
                     <div key={index} className="flex items-center gap-2">
                         {name}
-                        {index < roundTurnOrder.length - 1 && <ChevronsRight className="w-5 h-5 text-muted-foreground" />}
+                        {index < players.length - 1 && <ChevronsRight className="w-5 h-5 text-muted-foreground" />}
                     </div>
                 ))}
             </div>
@@ -440,5 +473,3 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
-
-    

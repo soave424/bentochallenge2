@@ -17,7 +17,7 @@ const MenuItemSchema = z.object({
   price: z.number(),
   taste: z.number(),
   convenience: z.number(),
-  ecoFriendliness: z.number(),
+  eco: z.number(),
 });
 
 const SimulateVirtualPlayersInputSchema = z.object({
@@ -58,11 +58,11 @@ Given the following constraints and the menu items, simulate the item choices fo
 Constraints:
 - Each virtual player starts with {{availableSeeds}} seeds.
 - Each player must select at least one item from each of the five categories if their budget allows.
-- Players should aim to maximize their taste, convenience and ecoFriendliness scores.
+- Players should aim to maximize their taste, convenience and eco scores.
 
 Menu Items:
 {{#each menuItems}}
-  {{this.number}}: {{this.name}} (Price: {{this.price}}, Taste: {{this.taste}}, Convenience: {{this.convenience}}, Eco: {{this.ecoFriendliness}})
+  {{this.number}}: {{this.name}} (Price: {{this.price}}, Taste: {{this.taste}}, Convenience: {{this.convenience}}, Eco: {{this.eco}})
 {{/each}}
 
 Simulate the choices for {{numVirtualPlayers}} virtual players. Provide the item numbers chosen by each player in the following JSON format:
