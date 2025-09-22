@@ -28,21 +28,14 @@ const GameBoard = () => {
   const [lastBonusCard, setLastBonusCard] = useState<BonusCard | null>(null);
   const [round, setRound] = useState(0); // 0-indexed, so 0 is round 1
   const [purchasedItemIds, setPurchasedItemIds] = useState<number[]>([]);
-
   const { toast } = useToast();
   
   const currentCategory = useMemo(() => CATEGORIES[round], [round]);
   const humanPlayer = useMemo(() => players.find(p => p.isHuman), [players]);
   const currentPlayer = useMemo(() => players[currentPlayerIndex], [players, currentPlayerIndex]);
 
-  const roundTurnOrder = useMemo(() => players.map((p, index) => (
-    <span key={p.id} className={cn("transition-opacity", index === currentPlayerIndex && "font-bold text-primary animate-pulse")}>
-      {p.name}
-    </span>
-  )), [players, currentPlayerIndex]);
-
   const canHumanPlayerSkip = useMemo(() => {
-      if (!humanPlayer || !currentCategory) return false;
+      if (!humanPlayer || !currentCategory || gamePhase !== 'buying') return false;
       
       const hasBoughtFromCategory = humanPlayer.bento.some(i => i.category === currentCategory);
       if(hasBoughtFromCategory){
@@ -53,28 +46,13 @@ const GameBoard = () => {
           !purchasedItemIds.includes(item.id) && humanPlayer.seeds >= item.price
       );
       return !canAffordAny;
-  }, [humanPlayer, currentCategory, shopItems, purchasedItemIds]);
+  }, [humanPlayer, currentCategory, shopItems, purchasedItemIds, gamePhase]);
 
-  const nextTurn = useCallback(() => {
-    setCurrentPlayerIndex(prevIndex => {
-      const nextPlayerIndex = (prevIndex + 1);
-  
-      if (nextPlayerIndex >= players.length) {
-        setGamePhase('round_summary');
-        return prevIndex; 
-      }
-      
-      const nextPlayer = players[nextPlayerIndex];
-      if (nextPlayer.eliminated) {
-        // This is tricky. We need to recursively call or loop.
-        // A simple timeout loop is safer against infinite loops.
-        setTimeout(() => nextTurn(), 500);
-      } else {
-        setGamePhase(nextPlayer.isHuman ? 'rolling' : 'ai_turn');
-      }
-      return nextPlayerIndex;
-    });
-  }, [players]);
+  const roundTurnOrder = useMemo(() => players.map((p, index) => (
+    <span key={p.id} className={cn("transition-opacity", index === currentPlayerIndex && "font-bold text-primary animate-pulse")}>
+      {p.name}
+    </span>
+  )), [players, currentPlayerIndex]);
 
   const advanceRound = () => {
     const nextRound = round + 1;
@@ -88,12 +66,33 @@ const GameBoard = () => {
     setPlayers(newPlayerOrder);
     setCurrentPlayerIndex(0);
     const firstPlayer = newPlayerOrder[0];
-     if (firstPlayer.eliminated) {
-      nextTurn();
+    
+    setGamePhase('player_turn');
+    if (firstPlayer.eliminated) {
+      // Find the first non-eliminated player
+      const nextAvailablePlayerIndex = newPlayerOrder.findIndex(p => !p.eliminated);
+      if (nextAvailablePlayerIndex !== -1) {
+        setCurrentPlayerIndex(nextAvailablePlayerIndex);
+      } else {
+        // All players eliminated, end game
+        setGamePhase('game_over');
+      }
     } else {
-      setGamePhase(firstPlayer.isHuman ? 'rolling' : 'ai_turn');
+      setCurrentPlayerIndex(0);
     }
   }
+
+  const nextTurn = useCallback(() => {
+    setCurrentPlayerIndex(prevIndex => {
+      const nextPlayerIndex = (prevIndex + 1);
+      if (nextPlayerIndex >= players.length) {
+        setGamePhase('round_summary');
+        return prevIndex;
+      }
+      return nextPlayerIndex;
+    });
+  }, [players.length]);
+
 
   const initializeGame = useCallback(async () => {
     setGamePhase('loading');
@@ -106,7 +105,7 @@ const GameBoard = () => {
     };
     
     const virtualPlayerNames = ['가상 플레이어 1', '가상 플레이어 2', '가상 플레이어 3'];
-    let initialPlayers = [human];
+    let initialPlayers: Player[] = [human];
 
     if (NUM_VIRTUAL_PLAYERS > 0) {
        const aiChoices = await getVirtualPlayerChoices({
@@ -125,14 +124,31 @@ const GameBoard = () => {
     
     const shuffledPlayers = shuffle(initialPlayers);
     setPlayers(shuffledPlayers);
+    setGamePhase('player_turn');
+  }, []);
+
+  // Update shop items when round changes
+  useEffect(() => {
+    if (gamePhase === 'welcome' || gamePhase === 'loading') return;
+    setShopItems(menuItems.filter(item => item.category === currentCategory));
+  }, [round, currentCategory, gamePhase]);
+
+  // Main Game Loop Effect
+  useEffect(() => {
+    if (!currentPlayer || gamePhase === 'welcome' || gamePhase === 'loading' || gamePhase === 'round_summary' || gamePhase === 'game_over') return;
     
-    const firstPlayer = shuffledPlayers[0];
-    if (firstPlayer.eliminated) {
-      nextTurn();
-    } else {
-      setGamePhase(firstPlayer.isHuman ? 'rolling' : 'ai_turn');
+    if (currentPlayer.eliminated) {
+        setTimeout(() => nextTurn(), 500); // Skip eliminated player's turn
+        return;
     }
-  }, [nextTurn]);
+
+    if (currentPlayer.isHuman) {
+        setGamePhase('rolling');
+    } else {
+        setGamePhase('ai_turn');
+    }
+  }, [currentPlayer, nextTurn, gamePhase]);
+
 
   // Check for eliminated players
   useEffect(() => {
@@ -140,7 +156,7 @@ const GameBoard = () => {
 
     const minPrice = Math.min(...menuItems.map(i => i.price));
     
-    setPlayers(prev => prev.map(p => {
+    const updatedPlayers = players.map(p => {
         if (!p.eliminated && p.seeds < minPrice) {
             const canAffordAnything = menuItems.some(item => p.seeds >= item.price);
             if (!canAffordAnything) {
@@ -149,19 +165,13 @@ const GameBoard = () => {
             }
         }
         return p;
-    }));
-  }, [gamePhase, toast, players.length]);
-
-  useEffect(() => {
-    if (gamePhase === 'welcome' || gamePhase === 'loading') return;
-    setShopItems(menuItems.filter(item => item.category === currentCategory));
-  }, [round, currentCategory, gamePhase]);
-
-  useEffect(() => {
-    if (players.length > 0 && gamePhase === 'rolling' && !currentPlayer?.isHuman) {
-      setGamePhase('ai_turn');
+    });
+    // Only update state if there's a change to avoid loops
+    if (JSON.stringify(updatedPlayers) !== JSON.stringify(players)) {
+        setPlayers(updatedPlayers);
     }
-  }, [players, gamePhase, currentPlayer])
+  }, [players, toast, gamePhase]);
+
 
   const handleRollDice = (d1: number, d2: number) => {
     setDice([d1, d2]);
@@ -205,21 +215,17 @@ const GameBoard = () => {
     setPlayers(prev => prev.map(p => {
       if (p.id === currentPlayer.id) {
         const newSeeds = p.seeds - item.price;
-        let newBonusCards = p.bonusCards;
+        let finalSeeds = newSeeds;
 
         // 페트병 규제 tax 적용
         if ( (item.name === '플라스틱 생수' || item.name === '페트병 주스') && p.bonusCards.some(c => c.id === 'tax2') ) {
           toast({ title: '페트병 규제!', description: `'${item.name}' 구매로 씨앗 1개를 잃습니다.`, variant: 'destructive' });
-          return {
-            ...p,
-            seeds: newSeeds > 0 ? newSeeds -1 : 0,
-            bento: [...p.bento, item],
-          }
+          finalSeeds = newSeeds > 0 ? newSeeds -1 : 0;
         }
 
         return {
           ...p,
-          seeds: newSeeds,
+          seeds: finalSeeds,
           bento: [...p.bento, item],
         };
       }
@@ -230,7 +236,6 @@ const GameBoard = () => {
     
     toast({ title: '아이템 구매!', description: `${item.name}을(를) ${item.price} 씨앗으로 구매했습니다.` });
     
-    setGamePhase('player_turn');
     setTimeout(() => nextTurn(), 1500);
   };
   
@@ -325,7 +330,7 @@ const GameBoard = () => {
     return <WelcomeDialog onStart={initializeGame} />;
   }
   
-  if (gamePhase === 'loading' || !currentCategory || !humanPlayer) {
+  if (gamePhase === 'loading' || !currentCategory || !humanPlayer || !currentPlayer) {
     return <div className="text-xl font-headline">게임 준비 중...</div>
   }
 
@@ -361,7 +366,6 @@ const GameBoard = () => {
           player={humanPlayer}
           shopItems={shopItems}
           onSkip={() => {
-            setGamePhase('player_turn'); // to prevent double skip
             nextTurn();
           }}
           canSkip={canHumanPlayerSkip}
@@ -393,5 +397,3 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
-
-    
