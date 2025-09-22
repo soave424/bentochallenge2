@@ -8,9 +8,8 @@ import { bonusCards, initialMenuItems } from '@/data/game-data';
 import { getMenuItems, saveMenuItems } from '@/lib/game-data-service';
 import { getVirtualPlayerChoices } from '@/app/actions';
 import { CATEGORIES }from '@/lib/types';
-import { calculatePlayerScore } from '@/lib/scoring';
 import { shuffle, cn } from '@/lib/utils';
-import { ChevronsRight, Settings, Loader2 } from 'lucide-react';
+import { ChevronsRight, Settings, Loader2, ArrowRight } from 'lucide-react';
 
 import WelcomeDialog from './WelcomeDialog';
 import ResultsDialog from './ResultsDialog';
@@ -60,6 +59,7 @@ const GameBoard = () => {
   const [lastBonusCard, setLastBonusCard] = useState<BonusCard | null>(null);
   const [round, setRound] = useState(0); // 0-indexed, so 0 is round 1
   const [purchasedItemIds, setPurchasedItemIds] = useState<string[]>([]);
+  const [isRoundSummaryOpen, setIsRoundSummaryOpen] = useState(false);
   const { toast } = useToast();
 
   const currentCategory = useMemo(() => CATEGORIES[round], [round]);
@@ -68,18 +68,14 @@ const GameBoard = () => {
   const currentPlayer = useMemo(() => players[currentPlayerIndex], [players, currentPlayerIndex]);
 
   const advanceToNextPlayer = useCallback(() => {
-    let nextIndex = currentPlayerIndex + 1;
-
-    while(nextIndex < players.length && players[nextIndex].eliminated) {
-      toast({description: `${players[nextIndex].name}님은 탈락하여 턴을 건너뜁니다.`})
-      nextIndex++;
-    }
+    const nextIndex = currentPlayerIndex + 1;
 
     if (nextIndex >= players.length) {
-       if (round >= CATEGORIES.length - 1) {
+      setIsRoundSummaryOpen(true);
+      if (round >= CATEGORIES.length - 1) {
         setGamePhase('game_over');
       } else {
-        setGamePhase('round_summary');
+        setGamePhase('round_end');
       }
     } else {
       setCurrentPlayerIndex(nextIndex);
@@ -90,7 +86,7 @@ const GameBoard = () => {
         setGamePhase('ai_turn');
       }
     }
-  }, [currentPlayerIndex, players, toast, round]);
+  }, [currentPlayerIndex, players, round]);
 
 
   const canHumanPlayerSkip = useMemo(() => {
@@ -107,14 +103,22 @@ const GameBoard = () => {
   }, [humanPlayer, currentCategory, shopItems, purchasedItemIds, gamePhase]);
 
   const roundTurnOrder = useMemo(() => players.map((p, index) => (
-    <span key={p.id} className={cn("transition-opacity whitespace-nowrap", index === currentPlayerIndex && "font-bold text-primary animate-pulse")}>
+    <span key={p.id} className={cn("transition-opacity whitespace-nowrap", index === currentPlayerIndex && gamePhase !== 'round_end' && "font-bold text-primary animate-pulse")}>
       {p.name}
     </span>
-  )), [players, currentPlayerIndex]);
+  )), [players, currentPlayerIndex, gamePhase]);
 
   const advanceRound = () => {
+    setIsRoundSummaryOpen(false);
     const nextRound = round + 1;
-    const newPlayerOrder = shuffle([...players]);
+    
+    // Sort players by score for the new turn order
+    const newPlayerOrder = [...players].sort((a, b) => {
+        const scoreA = a.bento.reduce((acc, i) => acc + i.taste + i.convenience + i.eco, 0);
+        const scoreB = b.bento.reduce((acc, i) => acc + i.taste + i.convenience + i.eco, 0);
+        return scoreB - scoreA;
+    });
+
     const firstPlayerIndex = 0;
     
     setPurchasedItemIds([]);
@@ -132,6 +136,7 @@ const GameBoard = () => {
 
   const initializeGame = useCallback(async () => {
     setGamePhase('loading');
+    setIsRoundSummaryOpen(false);
     
     let currentMenuItems = await getMenuItems();
     if (!currentMenuItems || currentMenuItems.length === 0) {
@@ -145,7 +150,7 @@ const GameBoard = () => {
     setPurchasedItemIds([]);
 
     const human: Player = {
-      id: 'player-human', name: '나', isHuman: true, seeds: INITIAL_SEEDS, bento: [], bonusCards: [], eliminated: false,
+      id: 'player-human', name: '나', isHuman: true, seeds: INITIAL_SEEDS, bento: [], bonusCards: [],
     };
     
     const virtualPlayerNames = ["지혜로운 라이언", "용감한 제이지", "친절한 어피치"];
@@ -161,7 +166,7 @@ const GameBoard = () => {
       });
       
       const virtualPlayers: Player[] = Array.from({ length: NUM_VIRTUAL_PLAYERS }).map((_, i) => ({
-        id: `player-ai-${i}`, name: virtualPlayerNames[i % virtualPlayerNames.length], isHuman: false, seeds: INITIAL_SEEDS, bento: [], bonusCards: [], aiShoppingList: aiChoices.playerChoices[i]?.itemIds || [], eliminated: false,
+        id: `player-ai-${i}`, name: virtualPlayerNames[i % virtualPlayerNames.length], isHuman: false, seeds: INITIAL_SEEDS, bento: [], bonusCards: [], aiShoppingList: aiChoices.playerChoices[i]?.itemIds || [],
       }));
       initialPlayers.push(...virtualPlayers);
     }
@@ -183,28 +188,6 @@ const GameBoard = () => {
     if (gamePhase === 'welcome' || gamePhase === 'loading' || menuItems.length === 0) return;
     setShopItems(menuItems.filter(item => item.category === currentCategory));
   }, [round, currentCategory, gamePhase, menuItems]);
-
-  const checkAndHandleElimination = (player: Player): Player => {
-    if (player.eliminated) return player;
-    
-    // Check if player has enough seeds to buy any item left in the *entire game* in categories they haven't bought from yet
-    const remainingCategories = CATEGORIES.filter(cat => !player.bento.some(item => item.category === cat));
-    
-    if (remainingCategories.length === 0) return player;
-
-    const minPriceInGameForRemainingCategories = Math.min(...menuItems.filter(i => remainingCategories.includes(i.category)).map(i => i.price));
-
-    if (player.seeds < minPriceInGameForRemainingCategories) {
-        toast({ 
-            title: `${player.name} 탈락`, 
-            description: `씨앗이 부족하여 더 이상 필수 아이템을 구매할 수 없습니다.`, 
-            variant: 'destructive'
-        });
-        return { ...player, eliminated: true };
-    }
-
-    return player;
-};
   
   const handleRollDice = () => {
     if (gamePhase !== 'rolling') return;
@@ -278,9 +261,7 @@ const GameBoard = () => {
       bento: [...currentPlayer.bento, item],
     };
 
-    const playerAfterEliminationCheck = checkAndHandleElimination(updatedPlayer);
-
-    setPlayers(prev => prev.map(p => (p.id === currentPlayer.id ? playerAfterEliminationCheck : p)));
+    setPlayers(prev => prev.map(p => (p.id === currentPlayer.id ? updatedPlayer : p)));
     setPurchasedItemIds(prev => [...prev, item.id]);
     toast({ title: '아이템 구매!', description: `${item.name}을(를) ${item.price} 씨앗으로 구매했습니다.` });
     
@@ -317,7 +298,6 @@ const GameBoard = () => {
       }, 2500);
 
       setTimeout(() => {
-        let boughtAnItem = false;
         const hasBoughtFromCategory = ai.bento.some(i => i.category === currentCategory);
 
         if (!hasBoughtFromCategory) {
@@ -328,13 +308,14 @@ const GameBoard = () => {
                 const shoppingListItems = availableCategoryItems.filter(item => (ai.aiShoppingList || []).includes(item.id));
 
                 if(shoppingListItems.length > 0) {
+                    // Buy the most expensive item from their shopping list they can afford
                     itemToBuy = shoppingListItems.sort((a,b) => b.price - a.price)[0];
                 } else {
+                    // If no shopping list items are available, buy the most expensive available item
                     itemToBuy = availableCategoryItems.sort((a,b) => b.price - a.price)[0];
                 }
 
                 if (itemToBuy) {
-                    boughtAnItem = true;
                     let finalSeeds = ai.seeds - itemToBuy.price;
                      if ((itemToBuy!.name === '플라스틱 생수' || itemToBuy!.name === '페트병 주스') && ai.bonusCards.some(c => c.id === 'tax2')) {
                         toast({ title: '페트병 규제!', description: `${ai.name}이(가) '${itemToBuy!.name}' 구매로 씨앗 1개를 잃습니다.`, variant: 'destructive' });
@@ -346,10 +327,8 @@ const GameBoard = () => {
                         bento: [...ai.bento, itemToBuy],
                         aiShoppingList: (ai.aiShoppingList || []).filter(id => id !== itemToBuy!.id)
                     };
-
-                    const aiAfterEliminationCheck = checkAndHandleElimination(updatedAiPlayer);
                     
-                    setPlayers(prev => prev.map(p => p.id === ai.id ? aiAfterEliminationCheck : p));
+                    setPlayers(prev => prev.map(p => p.id === ai.id ? updatedAiPlayer : p));
                     setPurchasedItemIds(prev => [...prev, itemToBuy!.id]);
                     toast({ title: `${ai.name} 구매!`, description: `${ai.name}이(가) ${itemToBuy.name}을(를) ${itemToBuy.price} 씨앗으로 샀습니다.` });
                 }
@@ -372,10 +351,21 @@ const GameBoard = () => {
   if (gamePhase === 'loading' || !humanPlayer || !currentPlayer || menuItems.length === 0) {
     return <GameLoading />;
   }
+  
+  const renderNextRoundButton = () => {
+    if (gamePhase !== 'round_end') return null;
+    return (
+        <div className="absolute inset-x-0 bottom-0 p-4 bg-background/80 backdrop-blur-sm flex justify-center lg:relative lg:bg-transparent lg:bottom-auto lg:p-0">
+            <Button size="lg" onClick={advanceRound} className="w-full lg:w-auto animate-pulse">
+                다음 라운드로 <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+        </div>
+    )
+  }
 
   return (
-    <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 p-4 relative">
-       <div className="absolute top-0 right-0">
+    <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 p-4 md:p-6 relative">
+       <div className="absolute top-2 right-2 md:top-4 md:right-4">
         <Button asChild variant="outline" size="sm">
             <Link href="/admin">
                 <Settings className="w-4 h-4 mr-2" />
@@ -384,10 +374,10 @@ const GameBoard = () => {
         </Button>
       </div>
 
-      <div className="lg:col-span-2">
-        <div className="mb-4 mt-8 p-3 bg-secondary/50 rounded-lg text-center">
+      <div className="lg:col-span-2 flex flex-col gap-4">
+        <div className="mt-8 p-3 bg-secondary/50 rounded-lg text-center">
             <p className="text-sm text-muted-foreground">이번 라운드 순서</p>
-            <div className="font-semibold text-lg flex items-center justify-center gap-x-2 flex-nowrap overflow-x-auto">
+            <div className="font-semibold text-lg flex items-center justify-center gap-x-2 flex-nowrap overflow-x-auto px-4">
                 {roundTurnOrder.map((name, index) => (
                     <div key={index} className="flex items-center gap-2">
                         {name}
@@ -403,6 +393,8 @@ const GameBoard = () => {
           round={round + 1} 
           category={currentCategory}
           purchasedItemIds={purchasedItemIds}
+          showNextRoundButton={gamePhase === 'round_end'}
+          onNextRound={advanceRound}
         />
       </div>
 
@@ -424,7 +416,7 @@ const GameBoard = () => {
             />
           )}
           {otherPlayers.length > 0 && (
-             <ScrollArea className="h-[40vh] pr-3">
+             <ScrollArea className="h-[calc(100vh-600px)] min-h-[200px] lg:h-[40vh] pr-3">
                  <div className="space-y-2">
                     <p className="text-sm font-semibold text-muted-foreground px-2">다른 플레이어</p>
                     {otherPlayers.map(player => (
@@ -441,11 +433,11 @@ const GameBoard = () => {
         </div>
       </div>
        
-      {gamePhase === 'round_summary' && (
+      {isRoundSummaryOpen && (
         <RoundSummary
           players={players}
           round={round}
-          onNextRound={advanceRound}
+          onClose={() => setIsRoundSummaryOpen(false)}
         />
       )}
 
@@ -457,7 +449,3 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
-
-    
-
-    

@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -96,39 +97,29 @@ const PlayerStatus = ({ player, isCurrent, isCompact = false }: PlayerStatusProp
 
   if (isCompact) {
     return (
-        <Card className={cn("transition-all", isCurrent ? 'ring-2 ring-primary shadow-lg' : '', player.eliminated && 'opacity-40 bg-destructive/10')}>
+        <Card className={cn("transition-all", isCurrent ? 'ring-2 ring-primary shadow-lg' : '')}>
              <div className="p-3">
-                 {player.eliminated ? (
-                     <div className="flex justify-between items-center">
-                        <p className="font-bold text-sm text-muted-foreground">{player.name}</p>
-                        <Badge variant="destructive" className="text-xs">탈락</Badge>
-                     </div>
-                 ) : (
-                    <div className="flex justify-between items-center text-sm">
-                        <p className="font-bold truncate">{player.name}</p>
-                        <div className="flex items-center gap-2 text-xs shrink-0">
-                            <Separator orientation="vertical" className="h-4 mx-1"/>
-                            <div className="flex items-center gap-1" title="맛"><Utensils className="w-4 h-4 text-orange-500" /><span>{score.taste}</span></div>
-                            <div className="flex items-center gap-1" title="편리함"><Smile className="w-4 h-4 text-blue-500" /><span>{score.convenience}</span></div>
-                            <div className="flex items-center gap-1" title="친환경"><Leaf className="w-4 h-4 text-green-500" /><span>{score.eco}</span></div>
-                             <Separator orientation="vertical" className="h-4 mx-1"/>
-                            <div className="flex items-center gap-1 font-semibold" title="씨앗"><Coins className="w-4 h-4 text-amber-500"/><span>{player.seeds}</span></div>
-                        </div>
+                <div className="flex justify-between items-center text-sm">
+                    <p className="font-bold truncate shrink-0 mr-2">{player.name}</p>
+                    <div className="flex items-center gap-2 text-xs shrink-0 overflow-x-auto">
+                        <Separator orientation="vertical" className="h-4"/>
+                        <div className="flex items-center gap-1" title="맛"><Utensils className="w-4 h-4 text-orange-500 shrink-0" /><span>{score.taste}</span></div>
+                        <div className="flex items-center gap-1" title="편리함"><Smile className="w-4 h-4 text-blue-500 shrink-0" /><span>{score.convenience}</span></div>
+                        <div className="flex items-center gap-1" title="친환경"><Leaf className="w-4 h-4 text-green-500 shrink-0" /><span>{score.eco}</span></div>
+                         <Separator orientation="vertical" className="h-4"/>
+                        <div className="flex items-center gap-1 font-semibold" title="씨앗"><Coins className="w-4 h-4 text-amber-500 shrink-0"/><span>{player.seeds}</span></div>
                     </div>
-                 )}
+                </div>
              </div>
         </Card>
     )
   }
 
   return (
-    <Card className={cn("transition-all", isCurrent ? 'ring-2 ring-primary shadow-lg' : '', player.eliminated && 'opacity-40 bg-destructive/10')}>
+    <Card className={cn("transition-all", isCurrent ? 'ring-2 ring-primary shadow-lg' : '')}>
       <CardHeader className="p-4">
         <div className="flex justify-between items-center">
             <CardTitle className="text-xl font-headline">{player.name} {player.isHuman && '(나)'}</CardTitle>
-            {player.eliminated ? (
-                <Badge variant="destructive">탈락</Badge>
-            ) : (
               <div className="flex items-center gap-2">
                 <Coins className="w-5 h-5 text-amber-500"/>
                 <div className="flex items-center gap-0.5">
@@ -137,7 +128,6 @@ const PlayerStatus = ({ player, isCurrent, isCompact = false }: PlayerStatusProp
                   ))}
                 </div>
               </div>
-            )}
         </div>
         <div className="flex flex-col gap-3 text-sm pt-4">
             <ScoreSlider value={score.taste} label="맛" Icon={Utensils} iconColor="text-orange-500" />

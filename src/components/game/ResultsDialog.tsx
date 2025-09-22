@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -9,7 +10,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import type { Player, Score, ScoreWithBonuses } from '@/lib/types';
+import type { Player } from '@/lib/types';
 import { calculatePlayerScore } from '@/lib/scoring';
 import { Crown, Leaf, Smile, Utensils, Sparkles, ArrowRight } from 'lucide-react';
 import { useState, useMemo } from 'react';
@@ -28,20 +29,17 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
     const scores = useMemo(() => players.map(p => calculatePlayerScore(p, showBonuses)), [players, showBonuses]);
 
     const sortedScores = useMemo(() => [...scores].sort((a, b) => {
-        if (a.player.eliminated && !b.player.eliminated) return 1;
-        if (!a.player.eliminated && b.player.eliminated) return -1;
         if (b.total === a.total) {
             return b.score.eco - a.score.eco;
         }
         return b.total - a.total;
     }), [scores]);
 
-    const activePlayersScores = useMemo(() => scores.filter(s => !s.player.eliminated), [scores]);
 
     const winner = sortedScores[0];
-    const ecoChamp = activePlayersScores.length > 0 ? [...activePlayersScores].sort((a, b) => b.score.eco - a.score.eco)[0] : null;
-    const tasteChamp = activePlayersScores.length > 0 ? [...activePlayersScores].sort((a, b) => b.score.taste - a.score.taste)[0] : null;
-    const convenienceChamp = activePlayersScores.length > 0 ? [...activePlayersScores].sort((a, b) => b.score.convenience - a.score.convenience)[0] : null;
+    const ecoChamp = [...scores].sort((a, b) => b.score.eco - a.score.eco)[0] ?? null;
+    const tasteChamp = [...scores].sort((a, b) => b.score.taste - a.score.taste)[0] ?? null;
+    const convenienceChamp = [...scores].sort((a, b) => b.score.convenience - a.score.convenience)[0] ?? null;
 
 
     return (
@@ -66,11 +64,11 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
 
             <div className="space-y-2">
                 {sortedScores.map(({ player, score, total, bonusDetails }, index) => (
-                    <div key={player.id} className={cn("flex flex-col p-3 bg-secondary rounded-md", player.eliminated && "opacity-50")}>
+                    <div key={player.id} className="flex flex-col p-3 bg-secondary rounded-md">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <span className="text-xl font-bold">{index + 1}.</span>
-                                <p className="font-semibold">{player.name} {player.eliminated ? '(탈락)' : ''}</p>
+                                <p className="font-semibold">{player.name}</p>
                             </div>
                             <div className="text-right">
                                 <p className="font-bold">소비자 만족도: {total}</p>
@@ -82,7 +80,7 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
                                 {bonusDetails.map((detail, i) => (
                                     <div key={i} className="flex justify-between items-center text-xs">
                                         <div className="text-muted-foreground flex items-center">
-                                            <Badge variant={detail.value > 0 ? "default" : "destructive"} className="mr-2 text-xs w-auto justify-center whitespace-nowrap">
+                                            <Badge variant={detail.value > 0 ? "default" : "destructive"} className="mr-2 text-xs w-auto justify-center whitespace-nowrap px-1.5 py-0">
                                                 {detail.value > 0 ? `+${detail.value}` : detail.value} {detail.metric === 'total' ? '만족도' : detail.metric}
                                             </Badge>
                                             {detail.cardName}
@@ -129,5 +127,3 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
 };
 
 export default ResultsDialog;
-
-    

@@ -1,3 +1,4 @@
+
 export type Category =
   | 'Side Dish'
   | 'Fruit'
@@ -51,7 +52,6 @@ export interface Player {
   bento: MenuItem[];
   bonusCards: BonusCard[];
   aiShoppingList?: string[];
-  eliminated: boolean;
 }
 
 export type GamePhase =
@@ -61,14 +61,13 @@ export type GamePhase =
   | 'player_turn'
   | 'ai_turn'
   | 'buying'
-  | 'round_summary'
+  | 'round_end'
   | 'game_over';
 
 export interface Score {
   taste: number;
   convenience: number;
   eco: number;
-  total: number;
 }
 
 export interface BonusDetail {

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { MenuItem, Category, CATEGORY_NAMES } from '@/lib/types';
@@ -6,8 +7,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Utensils, Smile, Leaf } from 'lucide-react';
+import { Utensils, Smile, Leaf, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '../ui/button';
 
 interface ShopProps {
   items: MenuItem[];
@@ -16,6 +18,8 @@ interface ShopProps {
   round: number;
   category: Category;
   purchasedItemIds: string[];
+  showNextRoundButton: boolean;
+  onNextRound: () => void;
 }
 
 const categoryIcons: Record<Category, string> = {
@@ -26,23 +30,30 @@ const categoryIcons: Record<Category, string> = {
     'Snack': '🍪',
 }
 
-const Shop = ({ items, onBuy, disabled, category, round, purchasedItemIds }: ShopProps) => {
+const Shop = ({ items, onBuy, disabled, category, round, purchasedItemIds, showNextRoundButton, onNextRound }: ShopProps) => {
 
   return (
-    <Card className="h-full">
+    <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-4">
             <CardTitle className="font-headline text-2xl">아이템 상점</CardTitle>
             <Badge variant="secondary" className="text-lg">라운드 {round}</Badge>
         </div>
-        <h3 className="text-xl font-semibold font-headline flex items-center gap-2">
-            {categoryIcons[category]} {CATEGORY_NAMES[category]}
-        </h3>
+        <div className='flex items-center gap-4'>
+             {showNextRoundButton && (
+                <Button onClick={onNextRound} className="animate-pulse">
+                    다음 라운드 <ArrowRight className='w-4 h-4 ml-2' />
+                </Button>
+            )}
+            <h3 className="text-xl font-semibold font-headline flex items-center gap-2">
+                {categoryIcons[category]} {CATEGORY_NAMES[category]}
+            </h3>
+        </div>
       </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[75vh] pr-4">
+      <CardContent className="flex-grow">
+        <ScrollArea className="h-full max-h-[65vh] pr-4">
           <div className="space-y-6">
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {items.length > 0 ? items.map(item => {
                     const isPurchased = purchasedItemIds.includes(item.id);
                     const isShopDisabled = disabled || isPurchased;
@@ -64,6 +75,7 @@ const Shop = ({ items, onBuy, disabled, category, round, purchasedItemIds }: Sho
                                             data-ai-hint={item.imageHint}
                                             fill
                                             className="object-cover"
+                                            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
                                         />
                                         {isPurchased && (
                                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
