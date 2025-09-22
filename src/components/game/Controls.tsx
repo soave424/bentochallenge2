@@ -1,18 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { GamePhase, Player, MenuItem, RecommendBentoItemsOutput } from '@/lib/types';
+import type { GamePhase } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Bot, Sparkles } from 'lucide-react';
-import { getAiRecommendations } from '@/app/actions';
+import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Bot, Sparkles, ChevronRight } from 'lucide-react';
+import { getAiRecommendations, RecommendBentoItemsOutput } from '@/app/actions';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 
 interface ControlsProps {
   phase: GamePhase;
   dice: [number, number];
-  onRoll: (d1: number, d2: number) => void;
+  onRoll: () => void;
   onSkip: () => void;
   canSkip: boolean;
 }
@@ -30,23 +30,27 @@ const Controls = ({ phase, dice, onRoll, onSkip, canSkip }: ControlsProps) => {
   const [displayDice, setDisplayDice] = useState<[number,number]>(dice);
 
   useEffect(() => {
+    // When it's not the human player's turn to roll, show the actual dice from props
     if (phase !== 'rolling') {
         setDisplayDice(dice);
     }
   }, [dice, phase]);
 
   const handleRoll = () => {
+    if (phase !== 'rolling' || isRolling) return;
+    
     setIsRolling(true);
     let counter = 0;
     const interval = setInterval(() => {
       counter++;
-      setDisplayDice([Math.floor(Math.random() * 6) + 1, Math.floor(Math.random() * 6) + 1]);
+      const randomD1 = Math.floor(Math.random() * 6) + 1 as 1 | 2 | 3 | 4 | 5 | 6;
+      const randomD2 = Math.floor(Math.random() * 6) + 1 as 1 | 2 | 3 | 4 | 5 | 6;
+      setDisplayDice([randomD1, randomD2]);
+      
       if (counter > 10) {
         clearInterval(interval);
         setIsRolling(false);
-        const d1 = Math.floor(Math.random() * 6) + 1;
-        const d2 = Math.floor(Math.random() * 6) + 1;
-        onRoll(d1, d2);
+        onRoll(); // onRoll now calculates dice inside GameBoard
       }
     }, 100);
   };
@@ -78,13 +82,14 @@ const Controls = ({ phase, dice, onRoll, onSkip, canSkip }: ControlsProps) => {
         >
           {isRolling ? '주사위 굴리는 중...' : '주사위 굴리기 (보너스 카드)'}
         </Button>
-        {canSkip && (
+        {phase === 'buying' && (
              <Button
                 onClick={onSkip}
                 variant="outline"
                 className="w-full"
+                disabled={!canSkip}
             >
-                구매할 아이템 없음 (턴 넘기기)
+                턴 넘기기 <ChevronRight className="w-4 h-4 ml-2"/>
             </Button>
         )}
 
