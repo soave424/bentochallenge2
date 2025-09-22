@@ -59,6 +59,7 @@ const GameBoard = () => {
   const [round, setRound] = useState(0); // 0-indexed, so 0 is round 1
   const [purchasedItemIds, setPurchasedItemIds] = useState<string[]>([]);
   const [isRoundSummaryOpen, setIsRoundSummaryOpen] = useState(false);
+  const [drawnBonusCardIds, setDrawnBonusCardIds] = useState<string[]>([]);
   const { toast } = useToast();
 
   const currentCategory = useMemo(() => CATEGORIES[round], [round]);
@@ -104,7 +105,7 @@ const GameBoard = () => {
     </span>
   )), [players, currentPlayerIndex, gamePhase]);
 
-  const advanceRound = () => {
+  const advanceRound = useCallback(() => {
     if (round >= CATEGORIES.length - 1) {
         setGamePhase('game_over');
         return;
@@ -132,7 +133,7 @@ const GameBoard = () => {
     } else {
       setGamePhase('ai_turn');
     }
-  }
+  }, [round, players]);
 
   const handleNextRound = () => {
     setIsRoundSummaryOpen(false);
@@ -161,6 +162,7 @@ const GameBoard = () => {
     setRound(0);
     setCurrentPlayerIndex(0);
     setPurchasedItemIds([]);
+    setDrawnBonusCardIds([]);
     setIsRoundSummaryOpen(false);
 
     const human: Player = {
@@ -203,26 +205,28 @@ const GameBoard = () => {
     setDice([d1 as 1 | 2 | 3 | 4 | 5 | 6, d2 as 1 | 2 | 3 | 4 | 5 | 6]);
 
     if (d1 === d2) {
-      
-      setPlayers(prev => prev.map(p => {
-        const playerCardIds = new Set(p.bonusCards.map(c => c.id));
-        const availableCards = bonusCards.filter(c => !playerCardIds.has(c.id));
-        
+        const availableCards = bonusCards.filter(c => !drawnBonusCardIds.includes(c.id));
         if (availableCards.length > 0) {
-          const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
-          setLastBonusCard(randomCard);
-          
-          if (p.id === currentPlayer.id) {
-             toast({
-                title: '보너스 카드 획득!',
-                description: `비밀 보너스 카드를 받았습니다!`,
-              });
-             return { ...p, bonusCards: [...p.bonusCards, randomCard] };
-          }
+            const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+            setLastBonusCard(randomCard);
+            setDrawnBonusCardIds(prev => [...prev, randomCard.id]);
+            
+            setPlayers(prev => prev.map(p => {
+                if (p.id === currentPlayer.id) {
+                    toast({
+                        title: '보너스 카드 획득!',
+                        description: `${p.name}님이 비밀 보너스 카드를 받았습니다!`,
+                    });
+                    return { ...p, bonusCards: [...p.bonusCards, randomCard] };
+                }
+                return p;
+            }));
+        } else {
+            toast({
+                title: '이런!',
+                description: '더블이 나왔지만 모든 보너스 카드가 소진되었습니다!',
+            });
         }
-        return p;
-      }));
-
     }
     setGamePhase('buying');
   };
@@ -263,7 +267,8 @@ const GameBoard = () => {
     }
     
     let finalSeeds = currentPlayer.seeds - item.price;
-    if ( (item.name === '플라스틱 생수' || item.name === '페트병 주스') && currentPlayer.bonusCards.some(c => c.id === 'tax2') ) {
+    // '페트병 규제' 카드 효과 적용
+    if (currentPlayer.bonusCards.some(c => c.id === 'tax2') && (item.id === '21' || item.id === '23')) {
         toast({ title: '페트병 규제!', description: `'${item.name}' 구매로 시드 1개를 잃습니다.`, variant: 'destructive' });
         finalSeeds = Math.max(0, finalSeeds - 1);
     }
@@ -295,21 +300,22 @@ const GameBoard = () => {
           setDice([d1 as 1 | 2 | 3 | 4 | 5 | 6,d2 as 1 | 2 | 3 | 4 | 5 | 6]);
 
           if (d1 === d2) {
-              setPlayers(prev => prev.map(p => {
-                if (p.id === ai.id) {
-                    const playerCardIds = new Set(p.bonusCards.map(c => c.id));
-                    const availableCards = bonusCards.filter(c => !playerCardIds.has(c.id));
-                    if (availableCards.length > 0) {
-                        const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
-                        setLastBonusCard(randomCard);
-                        setTimeout(() => {
+              const availableCards = bonusCards.filter(c => !drawnBonusCardIds.includes(c.id));
+              if (availableCards.length > 0) {
+                  const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+                  setLastBonusCard(randomCard);
+                  setDrawnBonusCardIds(prev => [...prev, randomCard.id]);
+                  
+                  setPlayers(prev => prev.map(p => {
+                      if (p.id === ai.id) {
+                          setTimeout(() => {
                             toast({ title: '보너스 카드 획득!', description: `${ai.name}님이 비밀 보너스 카드를 받았습니다!` });
-                        }, 0);
-                        return { ...p, bonusCards: [...p.bonusCards, randomCard] };
-                    }
-                }
-                return p;
-            }));
+                          }, 0);
+                          return { ...p, bonusCards: [...p.bonusCards, randomCard] };
+                      }
+                      return p;
+                  }));
+              }
           }
       }, 1500);
 
@@ -325,10 +331,12 @@ const GameBoard = () => {
 
                 if (itemToBuy) {
                     let finalSeeds = ai.seeds - itemToBuy.price;
-                     if ((itemToBuy!.name === '플라스틱 생수' || itemToBuy!.name === '페트병 주스') && ai.bonusCards.some(c => c.id === 'tax2')) {
-                        toast({ title: '페트병 규제!', description: `${ai.name}이(가) '${itemToBuy!.name}' 구매로 시드 1개를 잃습니다.`, variant: 'destructive' });
+                    // '페트병 규제' 카드 효과 적용
+                    if (ai.bonusCards.some(c => c.id === 'tax2') && (itemToBuy.id === '21' || itemToBuy.id === '23')) {
+                        toast({ title: '페트병 규제!', description: `${ai.name}이(가) '${itemToBuy.name}' 구매로 시드 1개를 잃습니다.`, variant: 'destructive' });
                         finalSeeds = Math.max(0, finalSeeds - 1);
                     }
+                    
                     const updatedAiPlayer = {
                         ...ai,
                         seeds: finalSeeds,
@@ -349,7 +357,8 @@ const GameBoard = () => {
     };
 
     startAiTurn();
-  }, [gamePhase, currentPlayer, advanceToNextPlayer, shopItems, toast, currentCategory, purchasedItemIds, players]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gamePhase, currentPlayer]);
 
   if (gamePhase === 'welcome') {
     return <WelcomeDialog onStart={initializeGame} />;
@@ -361,7 +370,7 @@ const GameBoard = () => {
   
   return (
     <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 p-4 md:p-6 relative">
-       <div className="absolute top-2 right-2 md:top-4 md:right-4">
+      <div className="absolute top-2 right-2 md:top-4 md:right-4">
         <Button asChild variant="outline" size="sm">
             <Link href="/admin">
                 <Settings className="w-4 h-4 mr-2" />

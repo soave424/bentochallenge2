@@ -1,8 +1,8 @@
 
 import type { Player, Score, ScoreWithBonuses, BonusDetail, MenuItem } from './types';
 
-function hasItem(bento: Player['bento'], ...names: string[]): boolean {
-  return bento.some(item => names.includes(item.name));
+function hasItemId(bento: Player['bento'], ...ids: string[]): boolean {
+  return bento.some(item => ids.includes(item.id));
 }
 
 function countItems(bento: Player['bento'], predicate: (item: MenuItem) => boolean): number {
@@ -27,7 +27,7 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
   const baseTotal = baseScore.taste + baseScore.convenience + baseScore.eco;
   const bonusDetails: BonusDetail[] = [];
   
-  if (!applyBonuses) {
+  if (!applyBonuses || player.bonusCards.length === 0) {
     return { player, score: baseScore, total: baseTotal, bonusDetails };
   }
 
@@ -44,50 +44,58 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
 
     // --- Campaign Cards ---
     if (card.id === 'campaign1') { // 텀블러 챌린지
-      if (hasItem(player.bento, '텀블러 물')) {
+      if (hasItemId(player.bento, '22')) {
         metric = 'eco'; value = 3;
         ecoBonus += value; applied = true;
       }
-    } else if (card.id === 'campaign2') { // 로컬푸드 지지자
-      if (countItems(player.bento, item => item.name.includes('로컬') || item.name.includes('수제') || item.name.includes('지역')) > 0) {
+    }
+    else if (card.id === 'campaign2') { // 로컬푸드 지지자
+      if (hasItemId(player.bento, '2', '18', '13', '28', '49')) {
         metric = 'eco'; value = 2;
         ecoBonus += value; applied = true;
       }
-    } else if (card.id === 'campaign3') { // 지구지킴이 인증
+    }
+    else if (card.id === 'campaign3') { // 지구지킴이 인증
       const preCheckEco = player.bento.reduce((acc, item) => acc + item.eco, 0);
       if (preCheckEco >= 10) {
         metric = 'total'; value = 2;
         totalBonus += value; applied = true;
       }
-    } else if (card.id === 'campaign4') { // 물 절약 캠페인
-      if (!hasItem(player.bento, '플라스틱 생수')) {
+    }
+    else if (card.id === 'campaign4') { // 물 절약 캠페인
+      if (!hasItemId(player.bento, '21')) {
         metric = 'eco'; value = 2;
         ecoBonus += value; applied = true;
       }
-    } else if (card.id === 'campaign5') { // 비닐 제로 선언
-      if (!hasItem(player.bento, '과대포장 젤리', '포장 핫도그')) { 
-        metric = 'eco'; value = 3;
-        ecoBonus += value; applied = true;
+    }
+    else if (card.id === 'campaign5') { // 비닐 제로 선언
+      if (!hasItemId(player.bento, '41')) { 
+        metric = 'total'; value = 3;
+        totalBonus += value; applied = true;
       }
     }
     // --- Tax Cards ---
     else if (card.id === 'tax1') { // 플라스틱세 부과
-      if (hasItem(player.bento, '일회용 플라스틱 도시락')) {
+      if (hasItemId(player.bento, '31')) {
         metric = 'total'; value = -2;
         totalBonus += value; applied = true;
       }
-    } else if (card.id === 'tax3') { // 과대포장 벌금
-      if (hasItem(player.bento, '과대포장 젤리')) {
+    }
+    else if (card.id === 'tax3') { // 과대포장 벌금
+      if (hasItemId(player.bento, '41')) {
         metric = 'eco'; value = -3;
         ecoBonus += value; applied = true;
       }
-    } else if (card.id === 'tax4') { // 탄소발자국 경고
-      if (countItems(player.bento, item => item.name.includes('수입')) >= 2) {
+    }
+    else if (card.id === 'tax4') { // 탄소발자국 경고
+      const importedCount = countItems(player.bento, item => ['11', '17', '45'].includes(item.id));
+      if (importedCount >= 2) {
         metric = 'total'; value = -2;
         totalBonus += value; applied = true;
       }
-    } else if (card.id === 'tax5') { // 일회용 페널티
-      const disposableCount = countItems(player.bento, item => item.name.startsWith('일회용') || item.name.startsWith('플라스틱') || item.name.startsWith('페트병') || item.name.startsWith('캔'));
+    }
+    else if (card.id === 'tax5') { // 1회용 패널티 - 이 카드의 정확한 조건(일회용 젓가락, 비닐봉투)에 맞는 아이템이 현재 없으므로, 유사한 조건으로 대체합니다.
+      const disposableCount = countItems(player.bento, item => item.eco < 0 && (item.category === 'Container' || item.category === 'Drink'));
       if (disposableCount >= 2) {
         metric = 'total'; value = -3;
         totalBonus += value; applied = true;
