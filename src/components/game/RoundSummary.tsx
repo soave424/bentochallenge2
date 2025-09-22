@@ -24,7 +24,7 @@ const RoundSummary = ({ players, round, onNextRound }: RoundSummaryProps) => {
 
   return (
     <Dialog open={true}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl" hideCloseButton={true}>
         <DialogHeader>
           <DialogTitle className="text-2xl font-headline">
             라운드 {round + 1}: {currentCategoryName} 종료
