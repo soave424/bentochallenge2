@@ -4,10 +4,7 @@ import { useState, useEffect } from 'react';
 import type { GamePhase } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Bot, Sparkles, ChevronRight } from 'lucide-react';
-import { getAiRecommendations, RecommendBentoItemsOutput } from '@/app/actions';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Separator } from '@/components/ui/separator';
+import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, ChevronRight } from 'lucide-react';
 
 interface ControlsProps {
   phase: GamePhase;
@@ -25,8 +22,6 @@ const DiceIcon = ({ value }: { value: number }) => {
 
 const Controls = ({ phase, dice, onRoll, onSkip, canSkip }: ControlsProps) => {
   const [isRolling, setIsRolling] = useState(false);
-  const [recommendations, setRecommendations] = useState<RecommendBentoItemsOutput['recommendations'] | null>(null);
-  const [isRecommendationLoading, setIsRecommendationLoading] = useState(false);
   const [displayDice, setDisplayDice] = useState<[number,number]>(dice);
 
   useEffect(() => {
@@ -54,17 +49,6 @@ const Controls = ({ phase, dice, onRoll, onSkip, canSkip }: ControlsProps) => {
     }, 100);
   };
   
-  const handleGetRecommendation = async () => {
-      setIsRecommendationLoading(true);
-      // Mock API call for now
-      setTimeout(() => {
-        setRecommendations([
-            { name: "AI 추천 아이템", reason: "AI 추천 기능은 현재 개발 중입니다." }
-        ]);
-        setIsRecommendationLoading(false);
-      }, 1000);
-  }
-
   return (
     <Card>
       <CardContent className="p-4 space-y-4">
@@ -88,34 +72,6 @@ const Controls = ({ phase, dice, onRoll, onSkip, canSkip }: ControlsProps) => {
                 턴 넘기기 <ChevronRight className="w-4 h-4 ml-2"/>
             </Button>
         )}
-
-        <Separator />
-        
-        <Popover>
-            <PopoverTrigger asChild>
-                <Button variant="secondary" className="w-full" onClick={handleGetRecommendation} disabled={isRecommendationLoading}>
-                   {isRecommendationLoading ? '생각 중...' : <><Bot className="mr-2 h-4 w-4" /> AI 추천</>}
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80">
-                <div className="grid gap-4">
-                    <div className="space-y-2">
-                        <h4 className="font-medium leading-none flex items-center gap-2"><Sparkles className="w-4 h-4 text-accent"/> AI 제안</h4>
-                        <p className="text-sm text-muted-foreground">
-                        도시락을 개선할 아이디어입니다!
-                        </p>
-                    </div>
-                    <div className="grid gap-2">
-                    {recommendations ? recommendations.map((rec, i) => (
-                        <div key={i} className="text-sm p-2 bg-secondary/50 rounded-md">
-                            <p className="font-bold">{rec.name}</p>
-                            <p className="text-muted-foreground">{rec.reason}</p>
-                        </div>
-                    )) : <p className="text-sm text-muted-foreground">버튼을 눌러 추천을 받아보세요.</p>}
-                    </div>
-                </div>
-            </PopoverContent>
-        </Popover>
       </CardContent>
     </Card>
   );

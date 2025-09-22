@@ -25,7 +25,7 @@ const WelcomeDialog = ({ onStart }: WelcomeDialogProps) => {
             친환경 소비를 고려하는 똑똑한 소비자
           </DialogTitle>
           <DialogDescription className="text-base text-muted-foreground pt-2 text-left">
-            최고의 도시락을 만들면서 지속 가능한 선택을 해보세요. 게임 방법은 다음과 같습니다:
+            최고의 도시락을 만들며 지속 가능한 선택을 해보세요. 게임 방법은 다음과 같습니다:
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4 text-sm text-foreground">
