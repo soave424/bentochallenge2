@@ -65,14 +65,17 @@ const BentoSlot = ({ item }: { item?: MenuItem }) => {
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <div className="aspect-square bg-muted/50 rounded-md relative overflow-hidden">
+                    <div className="aspect-square bg-muted/50 rounded-md relative overflow-hidden group">
                          <Image
                           src={item.image}
                           alt={item.name}
                           data-ai-hint={item.imageHint}
                           fill
-                          className="object-cover"
+                          className="object-cover transition-transform group-hover:scale-105"
                         />
+                        <div className="absolute inset-x-0 bottom-0 bg-black/50 p-1 text-center">
+                            <p className="text-white text-xs font-semibold truncate">{item.name}</p>
+                        </div>
                     </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -185,3 +188,5 @@ const PlayerStatus = ({ player, isCurrent, isCompact = false }: PlayerStatusProp
 };
 
 export default PlayerStatus;
+
+    
