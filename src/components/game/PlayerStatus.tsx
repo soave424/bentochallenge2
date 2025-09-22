@@ -93,7 +93,7 @@ interface PlayerStatusProps {
 const PlayerStatus = ({ player, isCurrent, isCompact = false }: PlayerStatusProps) => {
     const { score } = calculatePlayerScore(player, false);
     const container = player.bento.find(item => item.category === 'Container');
-    const foodItems = player.bento.filter(item => item.category !== 'Container' && item.category !== 'Drink');
+    const foodItems = player.bento.filter(item => item.category !== 'Container');
 
   if (isCompact) {
     return (
