@@ -37,9 +37,16 @@ const RoundSummary = ({ players, round, onNextRound, onClose, isLastRound }: Rou
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-headline">
-            라운드 {round + 1}: {currentCategoryName} 종료
-          </DialogTitle>
+          <div className="flex justify-between items-center">
+            <DialogTitle className="text-2xl font-headline">
+              라운드 {round + 1}: {currentCategoryName} 종료
+            </DialogTitle>
+            {isLastRound && (
+               <Button onClick={onNextRound} size="sm">
+                최종 결과 보기 <ArrowRight className="w-4 h-4 ml-2"/>
+              </Button>
+            )}
+          </div>
           <DialogDescription>
             현재까지의 순위입니다.
           </DialogDescription>
