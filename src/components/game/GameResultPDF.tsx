@@ -15,7 +15,7 @@ const GameResultImage = React.forwardRef<HTMLDivElement, GameResultImageProps>((
 
     const renderBentoItem = (item: MenuItem) => (
         <div key={item.id} className="p-2 border rounded-md text-center bg-gray-50">
-            <p className="font-bold">{item.name}</p>
+            <p className="font-bold text-sm">{item.name}</p>
             <p className="text-xs">맛: {item.taste} | 편리: {item.convenience} | 친환경: {item.eco}</p>
         </div>
     );
@@ -45,10 +45,20 @@ const GameResultImage = React.forwardRef<HTMLDivElement, GameResultImageProps>((
                 <Card className="mb-6">
                     <CardHeader><CardTitle>적용된 보너스 카드</CardTitle></CardHeader>
                     <CardContent>
-                        <ul className="list-disc list-inside">
-                            {finalScore.bonusDetails.map((detail, i) => (
-                                <li key={i}>{detail.cardName} ({detail.value > 0 ? `+${detail.value}` : detail.value} {detail.metric})</li>
-                            ))}
+                        <ul className="list-disc list-inside space-y-1">
+                            {finalScore.bonusDetails.map((detail, i) => {
+                                let metricText = '';
+                                switch (detail.metric) {
+                                    case 'eco': metricText = '친환경'; break;
+                                    case 'taste': metricText = '맛'; break;
+                                    case 'convenience': metricText = '편리함'; break;
+                                    case 'total': metricText = '만족도'; break;
+                                    default: metricText = detail.metric;
+                                }
+                                return (
+                                   <li key={i}>{detail.cardName} ({metricText} {detail.value > 0 ? `+${detail.value}` : detail.value})</li>
+                                )
+                            })}
                         </ul>
                     </CardContent>
                 </Card>

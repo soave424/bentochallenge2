@@ -6,9 +6,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Player, ScoreWithBonuses, CATEGORIES, CATEGORY_NAMES } from '@/lib/types';
+import { Player, ScoreWithBonuses, CATEGORIES, CATEGORY_NAMES, BonusDetail } from '@/lib/types';
 import GameResultImage from './GameResultPDF';
 import { Download, Loader2 } from 'lucide-react';
+import { Badge } from '../ui/badge';
 
 interface DetailedResultsProps {
   player: Player;
@@ -40,6 +41,25 @@ const DetailedResults = ({ player, finalScore, onClose }: DetailedResultsProps) 
       });
   }, [imageContentRef, player.name]);
 
+  const renderBonusDetail = (detail: BonusDetail, index: number) => {
+    let metricText = '';
+    switch (detail.metric) {
+        case 'eco': metricText = '친환경'; break;
+        case 'taste': metricText = '맛'; break;
+        case 'convenience': metricText = '편리함'; break;
+        case 'total': metricText = '만족도'; break;
+        default: metricText = detail.metric;
+    }
+
+    return (
+        <div key={index} className="flex justify-between items-center text-sm">
+            <p className="text-muted-foreground">{detail.cardName}</p>
+            <Badge variant={detail.value > 0 ? "default" : "destructive"} className="text-xs whitespace-nowrap">
+                {metricText} {detail.value > 0 ? `+${detail.value}` : detail.value}
+            </Badge>
+        </div>
+    );
+  }
 
   return (
     <Dialog open={true} onOpenChange={open => !open && onClose()}>
@@ -79,6 +99,16 @@ const DetailedResults = ({ player, finalScore, onClose }: DetailedResultsProps) 
                     </div>
                 );
             })}
+
+            {finalScore.bonusDetails.length > 0 && (
+                <div className="mb-4 p-3 bg-secondary/50 rounded-md">
+                    <h4 className="font-bold text-primary mb-2">적용된 보너스 카드</h4>
+                    <div className="space-y-1">
+                        {finalScore.bonusDetails.map(renderBonusDetail)}
+                    </div>
+                </div>
+            )}
+
              <div className="mt-6">
                 <h4 className="font-bold mb-2">소감 남기기</h4>
                 <Textarea 
