@@ -106,12 +106,12 @@ const GameBoard = () => {
   )), [players, currentPlayerIndex, gamePhase]);
 
   const advanceRound = useCallback(() => {
-    if (round >= CATEGORIES.length - 1) {
+    const nextRound = round + 1;
+    
+    if (nextRound >= CATEGORIES.length) {
         setGamePhase('game_over');
         return;
     }
-
-    const nextRound = round + 1;
 
     // Sort players by score for the new turn order
     const newPlayerOrder = [...players].sort((a, b) => {
