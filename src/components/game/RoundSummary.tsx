@@ -21,7 +21,7 @@ interface RoundSummaryProps {
 const RoundSummary = ({ players, round, onNextRound, onClose, isLastRound }: RoundSummaryProps) => {
   const scores = useMemo(() => players.map(p => ({
     player: p,
-    score: calculatePlayerScore(p, false).score,
+    score: calculatePlayerScore(p, []).score,
   })).sort((a, b) => {
     const totalA = a.score.taste + a.score.convenience + a.score.eco;
     const totalB = b.score.taste + b.score.convenience + b.score.eco;
