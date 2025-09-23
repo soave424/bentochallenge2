@@ -213,10 +213,12 @@ const GameBoard = () => {
             
             setPlayers(prev => prev.map(p => {
                 if (p.id === currentPlayer.id) {
-                    toast({
-                        title: '보너스 카드 획득!',
-                        description: `${p.name}님이 비밀 보너스 카드를 받았습니다!`,
-                    });
+                    setTimeout(() => {
+                        toast({
+                            title: '보너스 카드 획득!',
+                            description: `${p.name}님이 비밀 보너스 카드를 받았습니다!`,
+                        });
+                    }, 0);
                     return { ...p, bonusCards: [...p.bonusCards, randomCard] };
                 }
                 return p;
@@ -454,5 +456,7 @@ const GameBoard = () => {
 };
 
 export default GameBoard;
+    
+    
 
     
