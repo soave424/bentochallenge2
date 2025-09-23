@@ -94,8 +94,8 @@ export function calculatePlayerScore(player: Player, applyBonuses: boolean): Sco
         totalBonus += value; applied = true;
       }
     }
-    else if (card.id === 'tax5') { // 1회용 패널티 - 이 카드의 정확한 조건(일회용 젓가락, 비닐봉투)에 맞는 아이템이 현재 없으므로, 유사한 조건으로 대체합니다.
-      const disposableCount = countItems(player.bento, item => item.eco < 0 && (item.category === 'Container' || item.category === 'Drink'));
+     else if (card.id === 'tax5') { // 1회용 패널티
+      const disposableCount = countItems(player.bento, item => ['31','21','23','24','41','50'].includes(item.id));
       if (disposableCount >= 2) {
         metric = 'total'; value = -3;
         totalBonus += value; applied = true;
