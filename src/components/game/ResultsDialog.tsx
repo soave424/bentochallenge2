@@ -10,40 +10,113 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import type { Player } from '@/lib/types';
-import { calculatePlayerScore } from '@/lib/scoring';
-import { Crown, Leaf, Smile, Utensils, Sparkles, ArrowRight, FileText } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import type { Player, Score, BonusCard } from '@/lib/types';
+import { calculatePlayerScore, getBonusEffect } from '@/lib/scoring';
+import { Crown, Leaf, Smile, Utensils, HelpCircle, FileText } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import DetailedResults from './DetailedResults';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+
 
 interface ResultsDialogProps {
   players: Player[];
   onRestart: () => void;
 }
 
-const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
-    const [showBonuses, setShowBonuses] = useState(false);
-    const [showDetailedResults, setShowDetailedResults] = useState(false);
-    
-    const humanPlayer = useMemo(() => players.find(p => p.isHuman), [players]);
-    const scores = useMemo(() => players.map(p => calculatePlayerScore(p, showBonuses)), [players, showBonuses]);
+interface PlayerResult {
+  player: Player;
+  baseScore: Score;
+  baseTotal: number;
+  revealedBonuses: BonusCard[];
+  currentScore: Score;
+  currentTotal: number;
+}
 
-    const sortedScores = useMemo(() => [...scores].sort((a, b) => {
-        if (b.total === a.total) {
-            return b.score.eco - a.score.eco;
+const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
+    const [showDetailedResults, setShowDetailedResults] = useState(false);
+
+    const initialResults = useMemo(() => {
+        return players.map(p => {
+            const { score, total } = calculatePlayerScore(p, []);
+            return {
+                player: p,
+                baseScore: score,
+                baseTotal: total,
+                revealedBonuses: [],
+                currentScore: score,
+                currentTotal: total
+            };
+        });
+    }, [players]);
+
+    const [playerResults, setPlayerResults] = useState<PlayerResult[]>(initialResults);
+
+    const handleCardClick = useCallback((playerId: string, card: BonusCard) => {
+        setPlayerResults(prevResults => {
+            return prevResults.map(pr => {
+                if (pr.player.id === playerId && !pr.revealedBonuses.find(c => c.id === card.id)) {
+                    const newRevealedBonuses = [...pr.revealedBonuses, card];
+                    const { score: newScore, total: newTotal } = calculatePlayerScore(pr.player, newRevealedBonuses);
+                    
+                    return {
+                        ...pr,
+                        revealedBonuses: newRevealedBonuses,
+                        currentScore: newScore,
+                        currentTotal: newTotal,
+                    };
+                }
+                return pr;
+            });
+        });
+    }, []);
+
+    const sortedScores = useMemo(() => [...playerResults].sort((a, b) => {
+        if (b.currentTotal === a.currentTotal) {
+            return b.currentScore.eco - a.currentScore.eco;
         }
-        return b.total - a.total;
-    }), [scores]);
+        return b.currentTotal - a.currentTotal;
+    }), [playerResults]);
 
     const winner = sortedScores[0];
-    const ecoChamp = [...scores].sort((a, b) => b.score.eco - a.score.eco)[0] ?? null;
-    const tasteChamp = [...scores].sort((a, b) => b.score.taste - a.score.taste)[0] ?? null;
-    const convenienceChamp = [...scores].sort((a, b) => b.score.convenience - a.score.convenience)[0] ?? null;
-    const totalBonusCards = useMemo(() => players.reduce((acc, p) => acc + p.bonusCards.length, 0), [players]);
-    const humanPlayerWithScore = useMemo(() => scores.find(s => s.player.isHuman), [scores]);
+    const getChamp = (metric: keyof Score) => {
+      if (playerResults.length === 0) return null;
+      return [...playerResults].sort((a,b) => b.currentScore[metric] - a.currentScore[metric])[0];
+    }
+
+    const ecoChamp = getChamp('eco');
+    const tasteChamp = getChamp('taste');
+    const convenienceChamp = getChamp('convenience');
+
+    const humanPlayerResult = useMemo(() => playerResults.find(r => r.player.isHuman), [playerResults]);
+    
+    const allCardsRevealed = useMemo(() => {
+        return playerResults.every(pr => pr.revealedBonuses.length === pr.player.bonusCards.length);
+    }, [playerResults]);
+
+
+    const renderBonusValue = (card: BonusCard, player: Player) => {
+        const effect = getBonusEffect(card, player);
+        if (!effect) return null;
+
+        const { metric, value } = effect;
+        let metricText = '';
+        switch (metric) {
+            case 'eco': metricText = '친환경'; break;
+            case 'taste': metricText = '맛'; break;
+            case 'convenience': metricText = '편리함'; break;
+            case 'total': metricText = '만족도'; break;
+            case 'seeds': metricText = '시드'; break;
+        }
+
+        return (
+             <Badge variant={value > 0 ? "success" : "destructive"} className="text-xs whitespace-nowrap">
+                {metricText} {value > 0 ? `+${value}` : value}
+            </Badge>
+        )
+    }
 
     return (
     <>
@@ -52,7 +125,7 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
         <DialogHeader>
           <DialogTitle className="text-3xl font-headline text-center text-primary">게임 종료!</DialogTitle>
           <DialogDescription className="text-center text-lg">
-            최종 결과입니다.
+            최종 결과입니다. 카드를 눌러 보너스를 확인하세요.
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[60vh] pr-4">
@@ -62,84 +135,98 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
                 <Crown className="w-6 h-6" /> 최종 우승
                 </h3>
                 <p className="text-2xl font-headline">{winner?.player.name}</p>
-                <p className="text-sm text-muted-foreground">소비자 만족도: {winner?.total}</p>
+                <p className="text-sm text-muted-foreground">소비자 만족도: {winner?.currentTotal}</p>
             </div>
             </div>
 
             <div className="space-y-2">
-                {sortedScores.map(({ player, score, total, bonusDetails }, index) => (
-                    <div key={player.id} className="flex flex-col p-3 bg-secondary rounded-md">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <span className="text-xl font-bold">{index + 1}.</span>
-                                <p className="font-semibold">{player.name}</p>
-                                {!showBonuses && (
-                                   <Badge variant="secondary" className={cn("text-xs", player.bonusCards.length === 0 && 'invisible')}>
-                                     보너스 {player.bonusCards.length}장
-                                   </Badge>
-                                )}
+                {sortedScores.map((result, index) => {
+                    const { player, currentScore, currentTotal, revealedBonuses } = result;
+                    return (
+                        <div key={player.id} className="flex flex-col p-3 bg-secondary rounded-md">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xl font-bold">{index + 1}.</span>
+                                    <p className="font-semibold">{player.name}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="font-bold">소비자 만족도: {currentTotal}</p>
+                                    <p className="text-xs text-muted-foreground">맛: {currentScore.taste}, 편리함: {currentScore.convenience}, 친환경: {currentScore.eco}</p>
+                                </div>
                             </div>
-                            <div className="text-right">
-                                <p className="font-bold">소비자 만족도: {total}</p>
-                                <p className="text-xs text-muted-foreground">맛: {score.taste}, 편리함: {score.convenience}, 친환경: {score.eco}</p>
-                            </div>
+                            {player.bonusCards.length > 0 && (
+                                <div className="mt-2 pt-2 border-t border-background flex flex-wrap gap-2">
+                                    {player.bonusCards.map((card, i) => {
+                                        const isRevealed = revealedBonuses.find(c => c.id === card.id);
+                                        return (
+                                            <TooltipProvider key={i}>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div
+                                                            onClick={() => handleCardClick(player.id, card)}
+                                                            className={cn(
+                                                                "w-20 h-28 bg-muted rounded-md flex items-center justify-center border-2 border-dashed border-primary/50 transition-all transform hover:scale-105",
+                                                                isRevealed ? 'bg-card border-solid' : 'cursor-pointer',
+                                                            )}
+                                                        >
+                                                            {isRevealed ? (
+                                                                <div className="text-center p-1 space-y-1">
+                                                                    <p className="text-xs font-bold leading-tight">{card.name}</p>
+                                                                    <p className="text-[10px] leading-snug text-muted-foreground">{card.description}</p>
+                                                                    {renderBonusValue(card, player)}
+                                                                </div>
+                                                            ) : (
+                                                                <HelpCircle className="w-8 h-8 text-primary/80"/>
+                                                            )}
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        {isRevealed ? <p>{card.name}</p> : <p>비밀 보너스 카드</p>}
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        )
+                                    })}
+                                </div>
+                            )}
                         </div>
-                        {showBonuses && bonusDetails.length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-background space-y-1">
-                                {bonusDetails.map((detail, i) => (
-                                    <div key={i} className="flex justify-between items-center text-xs">
-                                        <p className="text-muted-foreground">{detail.cardName}</p>
-                                        <Badge variant={detail.value > 0 ? "default" : "destructive"} className="text-xs whitespace-nowrap">
-                                            {detail.metric === 'total' ? '만족도' : detail.metric} {detail.value > 0 ? `+${detail.value}` : detail.value}
-                                        </Badge>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                ))}
+                    )
+                })}
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-4 text-center text-xs">
                 <div className="p-2 bg-green-500/20 rounded">
                     <Leaf className="mx-auto w-5 h-5 text-green-600 dark:text-green-400 mb-1"/>
                     <p className="font-bold">친환경 챔피언</p>
-                    {ecoChamp && <p>{ecoChamp.player.name} ({ecoChamp.score.eco}점)</p>}
+                    {ecoChamp && <p>{ecoChamp.player.name} ({ecoChamp.currentScore.eco}점)</p>}
                 </div>
                 <div className="p-2 bg-orange-500/20 rounded">
                     <Utensils className="mx-auto w-5 h-5 text-orange-600 dark:text-orange-400 mb-1"/>
                     <p className="font-bold">미식가</p>
-                    {tasteChamp && <p>{tasteChamp.player.name} ({tasteChamp.score.taste}점)</p>}
+                    {tasteChamp && <p>{tasteChamp.player.name} ({tasteChamp.currentScore.taste}점)</p>}
                 </div>
                 <div className="p-2 bg-blue-500/20 rounded">
                     <Smile className="mx-auto w-5 h-5 text-blue-600 dark:text-blue-400 mb-1"/>
                     <p className="font-bold">편리함의 왕</p>
-                    {convenienceChamp && <p>{convenienceChamp.player.name} ({convenienceChamp.score.convenience}점)</p>}
+                    {convenienceChamp && <p>{convenienceChamp.player.name} ({convenienceChamp.currentScore.convenience}점)</p>}
                 </div>
             </div>
         </ScrollArea>
         <DialogFooter className="mt-6 flex-col gap-2 sm:flex-col sm:space-x-0">
-            {!showBonuses && totalBonusCards > 0 && (
-                <Button onClick={() => setShowBonuses(true)} className="w-full">
-                    <Sparkles className="w-4 h-4 mr-2"/>
-                    보너스 카드 적용하기
-                    <ArrowRight className="w-4 h-4 ml-2"/>
-                </Button>
-            )}
-             {showBonuses && humanPlayerWithScore && (
+             {allCardsRevealed && humanPlayerResult && (
                  <Button onClick={() => setShowDetailedResults(true)} className="w-full" variant="secondary">
                     <FileText className="w-4 h-4 mr-2"/>
                     결과 상세보기
                 </Button>
              )}
-          <Button onClick={onRestart} className="w-full" variant={(showBonuses || totalBonusCards === 0) ? "default" : "outline"}>다시 시작</Button>
+          <Button onClick={onRestart} className="w-full" variant={allCardsRevealed ? "default" : "outline"}>다시 시작</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-    {showDetailedResults && humanPlayerWithScore && (
+    {showDetailedResults && humanPlayerResult && (
         <DetailedResults
-            player={humanPlayerWithScore.player}
-            finalScore={humanPlayerWithScore}
+            player={humanPlayerResult.player}
+            finalScore={{...humanPlayerResult, score: humanPlayerResult.currentScore, total: humanPlayerResult.currentTotal, bonusDetails: []}}
             onClose={() => setShowDetailedResults(false)}
         />
     )}

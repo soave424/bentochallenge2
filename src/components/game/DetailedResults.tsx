@@ -10,6 +10,7 @@ import { Player, ScoreWithBonuses, CATEGORIES, CATEGORY_NAMES, BonusDetail } fro
 import GameResultImage from './GameResultPDF';
 import { Download, Loader2 } from 'lucide-react';
 import { Badge } from '../ui/badge';
+import { getBonusEffect } from '@/lib/scoring';
 
 interface DetailedResultsProps {
   player: Player;
@@ -41,6 +42,12 @@ const DetailedResults = ({ player, finalScore, onClose }: DetailedResultsProps) 
       });
   }, [imageContentRef, player.name]);
 
+  const bonusDetails: BonusDetail[] = player.bonusCards.map(card => {
+    const effect = getBonusEffect(card, player);
+    return effect ? { cardName: card.name, ...effect } : null;
+  }).filter((detail): detail is BonusDetail => detail !== null);
+
+
   const renderBonusDetail = (detail: BonusDetail, index: number) => {
     let metricText = '';
     switch (detail.metric) {
@@ -48,13 +55,25 @@ const DetailedResults = ({ player, finalScore, onClose }: DetailedResultsProps) 
         case 'taste': metricText = '맛'; break;
         case 'convenience': metricText = '편리함'; break;
         case 'total': metricText = '만족도'; break;
+        case 'seeds': metricText = '시드'; break;
         default: metricText = detail.metric;
+    }
+
+    if (detail.metric === 'seeds') {
+        return (
+             <div key={index} className="flex justify-between items-center text-sm">
+                <p className="text-muted-foreground">{detail.cardName}</p>
+                <Badge variant={"destructive"} className="text-xs whitespace-nowrap">
+                    {metricText} {detail.value > 0 ? `+${detail.value}` : detail.value}
+                </Badge>
+            </div>
+        )
     }
 
     return (
         <div key={index} className="flex justify-between items-center text-sm">
             <p className="text-muted-foreground">{detail.cardName}</p>
-            <Badge variant={detail.value > 0 ? "default" : "destructive"} className="text-xs whitespace-nowrap">
+            <Badge variant={detail.value > 0 ? "success" : "destructive"} className="text-xs whitespace-nowrap">
                 {metricText} {detail.value > 0 ? `+${detail.value}` : detail.value}
             </Badge>
         </div>
@@ -78,6 +97,7 @@ const DetailedResults = ({ player, finalScore, onClose }: DetailedResultsProps) 
                     player={player} 
                     finalScore={finalScore} 
                     comments={comments} 
+                    bonusDetails={bonusDetails}
                 />
             </div>
 
@@ -100,11 +120,11 @@ const DetailedResults = ({ player, finalScore, onClose }: DetailedResultsProps) 
                 );
             })}
 
-            {finalScore.bonusDetails.length > 0 && (
+            {bonusDetails.length > 0 && (
                 <div className="mb-4 p-3 bg-secondary/50 rounded-md">
                     <h4 className="font-bold text-primary mb-2">적용된 보너스 카드</h4>
                     <div className="space-y-1">
-                        {finalScore.bonusDetails.map(renderBonusDetail)}
+                        {bonusDetails.map(renderBonusDetail)}
                     </div>
                 </div>
             )}

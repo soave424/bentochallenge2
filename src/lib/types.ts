@@ -1,5 +1,6 @@
 
 
+
 export type Category =
   | 'Side Dish'
   | 'Fruit'
@@ -74,7 +75,7 @@ export interface Score {
 
 export interface BonusDetail {
     cardName: string;
-    metric: 'taste' | 'convenience' | 'eco' | 'total';
+    metric: 'taste' | 'convenience' | 'eco' | 'total' | 'seeds';
     value: number;
 }
 

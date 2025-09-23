@@ -1,7 +1,7 @@
 
 'use client';
 import React from 'react';
-import { Player, ScoreWithBonuses, CATEGORIES, CATEGORY_NAMES, MenuItem } from '@/lib/types';
+import { Player, ScoreWithBonuses, CATEGORIES, CATEGORY_NAMES, MenuItem, BonusDetail } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
@@ -9,9 +9,10 @@ interface GameResultImageProps {
     player: Player;
     finalScore: ScoreWithBonuses;
     comments: string;
+    bonusDetails: BonusDetail[];
 }
 
-const GameResultImage = React.forwardRef<HTMLDivElement, GameResultImageProps>(({ player, finalScore, comments }, ref) => {
+const GameResultImage = React.forwardRef<HTMLDivElement, GameResultImageProps>(({ player, finalScore, comments, bonusDetails }, ref) => {
 
     const renderBentoItem = (item: MenuItem) => (
         <div key={item.id} className="p-2 border rounded-md text-center bg-gray-50">
@@ -41,18 +42,19 @@ const GameResultImage = React.forwardRef<HTMLDivElement, GameResultImageProps>((
                 </CardContent>
             </Card>
             
-            {finalScore.bonusDetails.length > 0 && (
+            {bonusDetails.length > 0 && (
                 <Card className="mb-6">
                     <CardHeader><CardTitle>적용된 보너스 카드</CardTitle></CardHeader>
                     <CardContent>
                         <ul className="list-disc list-inside space-y-1">
-                            {finalScore.bonusDetails.map((detail, i) => {
+                            {bonusDetails.map((detail, i) => {
                                 let metricText = '';
                                 switch (detail.metric) {
                                     case 'eco': metricText = '친환경'; break;
                                     case 'taste': metricText = '맛'; break;
                                     case 'convenience': metricText = '편리함'; break;
                                     case 'total': metricText = '만족도'; break;
+                                    case 'seeds': metricText = '시드'; break;
                                     default: metricText = detail.metric;
                                 }
                                 return (
