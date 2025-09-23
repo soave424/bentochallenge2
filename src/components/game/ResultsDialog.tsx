@@ -73,8 +73,10 @@ const ResultsDialog = ({ players, onRestart }: ResultsDialogProps) => {
                             <div className="flex items-center gap-3">
                                 <span className="text-xl font-bold">{index + 1}.</span>
                                 <p className="font-semibold">{player.name}</p>
-                                {!showBonuses && player.bonusCards.length > 0 && (
-                                   <Badge variant="secondary" className="text-xs">보너스 {player.bonusCards.length}장</Badge>
+                                {!showBonuses && (
+                                   <Badge variant="secondary" className={cn("text-xs", player.bonusCards.length === 0 && 'invisible')}>
+                                     보너스 {player.bonusCards.length}장
+                                   </Badge>
                                 )}
                             </div>
                             <div className="text-right">
